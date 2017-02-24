@@ -7,19 +7,16 @@ import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.webkit.ConsoleMessage;
-import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.RelativeLayout;
 
 public class WebActivity extends AppCompatActivity implements ValueCallback<String> {
 
-    private static final String TAG = "sldfkjslk";
-    private WebView wv;
+    private static final String TAG = WebActivity.class.getName();
+    private WebView mWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,28 +32,23 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
 
     @SuppressLint({"NewApi", "SetJavaScriptEnabled"})
     private void setWebView() {
-        wv = (WebView) findViewById(R.id.webView);
+        mWebView = (WebView) findViewById(R.id.webView);
+        WebSettings settings = mWebView.getSettings();
 
-        wv.getSettings().setJavaScriptEnabled(true);
-        wv.getSettings().setPluginState(WebSettings.PluginState.ON);
-        wv.setKeepScreenOn(true);
-        wv.setHorizontalScrollBarEnabled(false);
-        wv.setVerticalScrollBarEnabled(false);
-        wv.getSettings().setBuiltInZoomControls(true);
+        settings.setJavaScriptEnabled(true);
+        settings.setBuiltInZoomControls(true);
+        settings.setPluginState(WebSettings.PluginState.ON);
+        mWebView.setKeepScreenOn(true);
+        mWebView.setHorizontalScrollBarEnabled(false);
+        mWebView.setVerticalScrollBarEnabled(false);
 
-        wv.setWebChromeClient(new WebChromeClient(){
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                return super.onConsoleMessage(consoleMessage);
-            }
-        });
-
-        wv.setWebViewClient(new WebViewClient() {
+        mWebView.setWebChromeClient(new WebChromeClient());
+        mWebView.setWebViewClient(new WebViewClient() {
             @TargetApi(Build.VERSION_CODES.KITKAT)
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "WebViewClient onPageFinished url: " + url);
 
-                wv.evaluateJavascript("document.getElementByTagName(\"iframe\")[0].contentWindow" +
+                mWebView.evaluateJavascript("document.getElementByTagName(\"iframe\")[0].contentWindow" +
                         ".document.getElementsByClassName(\"html5-video-player ytp-new-infobar ytp-hide-controls ytp-small-mode ytp-native-controls playing-mode ytp-touch-mode\")" +
                         "[0].click();", WebActivity.this);
             }
@@ -65,7 +57,7 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
         final String mimeType = "text/html";
         final String encoding = "UTF-8";
         String html = getHTML();
-        wv.loadDataWithBaseURL("", html, mimeType, encoding, "");
+        mWebView.loadDataWithBaseURL("", html, mimeType, encoding, "");
     }
 
     @Override
@@ -73,11 +65,9 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
         Log.d(TAG, "Evaluate javascript: " + value);
     }
 
-    public String getHTML() {
-        String html = "<iframe id=iframe1\" width=\"420\" height=\"315\" src=\"http://www.youtube.com/embed/d9-zYbhDbPo" +
+    private String getHTML() {
+        return "<iframe id=iframe1\" width=\"420\" height=\"315\" src=\"http://www.youtube.com/embed/d9-zYbhDbPo" +
                 "?rel=0&autoplay=1&origin=http:///www.youtube.com\" frameborder=\"0\" allowfullscreen></iframe>";
-
-        return html;
     }
 
 }
