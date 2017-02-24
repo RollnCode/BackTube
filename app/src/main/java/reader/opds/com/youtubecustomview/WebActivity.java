@@ -73,8 +73,8 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
     }
 
     private String getHTML() {
-        return "<iframe id=iframe1\" width=\"420\" height=\"315\" src=\"http://www.youtube.com/embed/d9-zYbhDbPo" +
-                "?rel=0&autoplay=1&enablejsapi=1 frameborder=\"0\" allowfullscreen></iframe>";
+        return "<iframe id=iframe1\" crossorigin=\"anonymous\" width=\"420\" height=\"315\" src=\"http://www.youtube.com/embed/d9-zYbhDbPo" +
+                "?rel=0&autoplay=0&enablejsapi=1 frameborder=\"0\" allowfullscreen></iframe>";
     }
 
 }
