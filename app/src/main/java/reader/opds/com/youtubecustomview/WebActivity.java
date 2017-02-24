@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -42,13 +43,19 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
         mWebView.setHorizontalScrollBarEnabled(false);
         mWebView.setVerticalScrollBarEnabled(false);
 
-        mWebView.setWebChromeClient(new WebChromeClient());
+//        mWebView.setWebChromeClient(new WebChromeClient());
         mWebView.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return false;
+            }
+
             @TargetApi(Build.VERSION_CODES.KITKAT)
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "WebViewClient onPageFinished url: " + url);
 
-                mWebView.evaluateJavascript("document.getElementByTagName(\"iframe\")[0].contentWindow" +
+                mWebView.evaluateJavascript("document.getElementsByTagName(\"iframe\")[0].contentWindow" +
                         ".document.getElementsByClassName(\"html5-video-player ytp-new-infobar ytp-hide-controls ytp-small-mode ytp-native-controls playing-mode ytp-touch-mode\")" +
                         "[0].click();", WebActivity.this);
             }
@@ -67,7 +74,7 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
 
     private String getHTML() {
         return "<iframe id=iframe1\" width=\"420\" height=\"315\" src=\"http://www.youtube.com/embed/d9-zYbhDbPo" +
-                "?rel=0&autoplay=1&origin=http:///www.youtube.com\" frameborder=\"0\" allowfullscreen></iframe>";
+                "?rel=0&autoplay=1&enablejsapi=1 frameborder=\"0\" allowfullscreen></iframe>";
     }
 
 }
