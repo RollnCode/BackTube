@@ -82,6 +82,14 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
         Log.d(TAG, "Evaluate javascript: " + value);
     }
 
+    /**
+     * Get the html to load it in webView with several params
+     * @param iframeId an id of iframe tag
+     * @param videoId an id of current video
+     * @param autoPlay enable autoplay the video or not
+     * @param enableJsApi enable Javascript API or not
+     * @return complete string which we can load to webView
+     */
     private String getHTML(String iframeId, String videoId, String autoPlay, String enableJsApi) {
         return String.format("<iframe id=%s crossorigin=\"anonymous\" width=\"420\" height=\"315\" " +
                 "src=\"http://www.youtube.com/embed/%s?rel=0&autoplay=%s&enablejsapi=%s frameborder=\"0\" allowfullscreen></iframe>",

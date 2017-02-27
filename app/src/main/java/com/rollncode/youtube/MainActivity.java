@@ -25,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Get the result of check system permission to draw overlay window
+     */
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -33,11 +36,14 @@ public class MainActivity extends AppCompatActivity {
             if (Settings.canDrawOverlays(this)) {
                 start();
             } else {
-                Toast.makeText(getBaseContext(),"you deny this action", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(), "you deny to draw overlay window", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    /**
+     * Check system permission to draw overlay window
+     */
     @TargetApi(Build.VERSION_CODES.M)
     public void checkPermission() {
             if (Settings.canDrawOverlays(this)) {
@@ -49,7 +55,10 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
-    void start(){
+    /**
+     * Current activity starts service and finish itself
+     */
+    private void start(){
         startService(new Intent(this, HUD.class));
         finish();
     }

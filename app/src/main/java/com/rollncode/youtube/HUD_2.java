@@ -13,7 +13,13 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+/**
+ * This is temporary service realization to experiment how works alert window
+ * in this way
+ */
+
 public class HUD_2 extends Service {
+
     HUDView_2 mView;
 
     @Override
@@ -43,8 +49,7 @@ public class HUD_2 extends Service {
     public void onDestroy() {
         super.onDestroy();
         Toast.makeText(getBaseContext(),"onDestroy", Toast.LENGTH_LONG).show();
-        if(mView != null)
-        {
+        if(mView != null) {
             ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(mView);
             mView = null;
         }
@@ -56,7 +61,7 @@ class HUDView_2 extends ViewGroup {
 
     public HUDView_2(Context context) {
         super(context);
-        Toast.makeText(getContext(),"HUDView", Toast.LENGTH_LONG).show();
+        Toast.makeText(getContext(),"HUDView_2", Toast.LENGTH_LONG).show();
 
         mLoadPaint = new Paint();
         mLoadPaint.setAntiAlias(true);
