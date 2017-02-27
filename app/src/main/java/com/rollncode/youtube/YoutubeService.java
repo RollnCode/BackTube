@@ -5,7 +5,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
-import android.support.annotation.StringRes;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
@@ -13,8 +12,8 @@ import android.webkit.WebView;
 import android.widget.Toast;
 
 /**
- * This is temporary service realization to experiment how works alert window
- * in this way
+ * This is temporary service realization to experiment
+ * how works alert window in this way
  */
 
 public class YoutubeService extends Service {
@@ -33,14 +32,17 @@ public class YoutubeService extends Service {
         Toast.makeText(getBaseContext(), "onCreate", Toast.LENGTH_LONG).show();
         initWebView();
         loadWebViewContent("d9-zYbhDbPo", 160, 150, 20);
+        initAlerWindow();
+    }
 
+    private void initAlerWindow() {
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 600,
                 600,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                 0,
                 PixelFormat.TRANSLUCENT);
-        params.gravity = Gravity.RIGHT | Gravity.TOP;
+        params.gravity = Gravity.END | Gravity.TOP;
         params.setTitle("Load Average");
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
         wm.addView(mWebView, params);
