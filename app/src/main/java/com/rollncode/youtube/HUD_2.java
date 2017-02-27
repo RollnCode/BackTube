@@ -1,4 +1,4 @@
-package reader.opds.com.youtubecustomview;
+package com.rollncode.youtube;
 
 import android.app.Service;
 import android.content.Context;

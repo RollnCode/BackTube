@@ -1,4 +1,4 @@
-package reader.opds.com.youtubecustomview;
+package com.rollncode.youtube;
 
 import android.app.Service;
 import android.content.Context;
@@ -11,7 +11,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 public class HUD extends Service {
