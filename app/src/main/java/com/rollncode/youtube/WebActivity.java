@@ -54,7 +54,6 @@ public class WebActivity extends AppCompatActivity implements ValueCallback<Stri
         settings.setPluginState(WebSettings.PluginState.ON);
 
         settings.setBuiltInZoomControls(true);
-        webView.setKeepScreenOn(true);
         webView.setHorizontalScrollBarEnabled(false);
         webView.setVerticalScrollBarEnabled(false);
 

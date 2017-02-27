@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
      * Current activity starts service and finish itself
      */
     private void start(){
-        startService(new Intent(this, HUD.class));
+        startService(new Intent(this, YoutubeService.class));
         finish();
     }
 }

@@ -13,23 +13,23 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name="com.rollncode.youtube.WebActivity">
+        <activity android:name="com.rollncode.youtube.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name="com.rollncode.youtube.MainActivity"/>
+        <activity android:name="com.rollncode.youtube.WebActivity"/>
 
-        // This is temporary for testing I use two services
+        // This is temporary for testing only I use two services
 
         <service
-            android:name="com.rollncode.youtube.HUD"
+            android:name="com.rollncode.youtube.TestService"
             android:enabled="true" />
 
         <service
-            android:name="com.rollncode.youtube.HUD_2"
+            android:name="com.rollncode.youtube.YoutubeService"
             android:enabled="true" />
 
     </application>

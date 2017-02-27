@@ -8,7 +8,6 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -18,9 +17,9 @@ import android.widget.Toast;
  * in this way
  */
 
-public class HUD_2 extends Service {
+public class TestService extends Service {
 
-    HUDView_2 mView;
+    TestView mView;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -30,15 +29,16 @@ public class HUD_2 extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Toast.makeText(getBaseContext(),"onCreate", Toast.LENGTH_LONG).show();
-        mView = new HUDView_2(this);
+        Toast.makeText(getBaseContext(),"onCreate", Toast.LENGTH_SHORT).show();
+        int width = -(int)getResources().getDimension(R.dimen.view_width);
+        int height = -(int)getResources().getDimension(R.dimen.view_height);
+        mView = new TestView(this);
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                200,
-                100,
+                600,
+                600,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                 0,
-                PixelFormat.TRANSLUCENT);
+                PixelFormat.RGB_888);
         params.gravity = Gravity.RIGHT | Gravity.TOP;
         params.setTitle("Load Average");
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -56,10 +56,10 @@ public class HUD_2 extends Service {
     }
 }
 
-class HUDView_2 extends ViewGroup {
+class TestView extends ViewGroup {
     private Paint mLoadPaint;
 
-    public HUDView_2(Context context) {
+    public TestView(Context context) {
         super(context);
         Toast.makeText(getContext(),"HUDView_2", Toast.LENGTH_LONG).show();
 
@@ -70,18 +70,19 @@ class HUDView_2 extends ViewGroup {
     }
 
     @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawText("Hello World", 5, 15, mLoadPaint);
     }
 
-    @Override
-    protected void onLayout(boolean arg0, int arg1, int arg2, int arg3, int arg4) {
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Toast.makeText(getContext(),"onTouchEvent", Toast.LENGTH_LONG).show();
-        return true;
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        Toast.makeText(getContext(),"onTouchEvent", Toast.LENGTH_LONG).show();
+//        return true;
+//    }
 }
