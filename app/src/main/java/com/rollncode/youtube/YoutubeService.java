@@ -2,15 +2,11 @@ package com.rollncode.youtube;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.support.annotation.StringRes;
 import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -23,7 +19,7 @@ import android.widget.Toast;
 
 public class YoutubeService extends Service {
 
-    private WebView webView;
+    private WebView mWebView;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -34,9 +30,9 @@ public class YoutubeService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        Toast.makeText(getBaseContext(),"onCreate", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "onCreate", Toast.LENGTH_LONG).show();
         initWebView();
-        loadWebViewContent();
+        loadWebViewContent("d9-zYbhDbPo", 160, 150, 20);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 600,
@@ -47,54 +43,46 @@ public class YoutubeService extends Service {
         params.gravity = Gravity.RIGHT | Gravity.TOP;
         params.setTitle("Load Average");
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        wm.addView(webView, params);
+        wm.addView(mWebView, params);
     }
 
-    private void loadWebViewContent() {
-        String str = "<html>\n" +
-                "\n" +
-                "<head>\n" +
-                "<script>" +
-                "function def() {document.getElementsByClassName(\"" +
-                "html5-video-player ytp-new-infobar ytp-hide-controls ytp-small-mode ytp-native-controls playing-mode ytp-touch-mode" +
-                "\")[0].click();}" +
-                "</script>" +
-                "</head>\n" +
-                "\n" +
-                "<body onLoad=\"def()\">\n" +
-                "\n" +
-                "<iframe id=\"myFrame\" width=\"420\" height=\"315\"\n" +
-                "        src=\"http://www.youtube.com/embed/d9-zYbhDbPo?autoplay=1&enablejsapi=1\"\n" +
-                "        frameborder=\"0\" allowfullscreen></iframe>\n" +
-                "\n" +
-                "</body>\n" +
-                "\n" +
-                "</html>";
+    /**
+     * Get the html to load it in webView with several params - temporary implementation function inside
+     * @param videoId an id of current video
+     * @param width   a width of iframe
+     * @param height  a height of iframe
+     * @param frameBorder  a width of iframe border
+     */
+    private void loadWebViewContent(String videoId, int width, int height, int frameBorder) {
 
-        webView.loadData(str, "text/html; charset=utf-8", "UTF-8");
+        String str = String.format("<iframe width=%d height=%d " +
+                        "src=\"http://www.youtube.com/embed/%s?autoplay=1" +
+                        "&enablejsapi=1\" frameborder=%d allowfullscreen></iframe>",
+                width, height, videoId, frameBorder);
+
+        mWebView.loadData(str, "text/html; charset=utf-8", "UTF-8");
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initWebView() {
-        webView = new WebView(getApplicationContext());
-        WebSettings settings = webView.getSettings();
+        mWebView = new WebView(getApplicationContext());
+        WebSettings settings = mWebView.getSettings();
 
         settings.setJavaScriptEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setPluginState(WebSettings.PluginState.ON);
 
-        settings.setBuiltInZoomControls(true);
-        webView.setHorizontalScrollBarEnabled(false);
-        webView.setVerticalScrollBarEnabled(false);
+        mWebView.setHorizontalScrollBarEnabled(false);
+        mWebView.setVerticalScrollBarEnabled(false);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(getBaseContext(),"onDestroy", Toast.LENGTH_LONG).show();
-        if(webView != null) {
-            ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(webView);
-            webView = null;
+        Toast.makeText(getBaseContext(), "onDestroy", Toast.LENGTH_LONG).show();
+        if (mWebView != null) {
+            ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(mWebView);
+            mWebView = null;
         }
     }
 }
