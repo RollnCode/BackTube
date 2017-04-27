@@ -7,3 +7,10 @@
 /build
 /captures
 .externalNativeBuild
+Будет удалено src/main/java/com/rollncode/youtube/activity/
+Будет удалено src/main/java/com/rollncode/youtube/application/
+Будет удалено src/main/java/com/rollncode/youtube/service/
+Будет удалено src/main/java/com/rollncode/youtube/types/
+Будет удалено src/main/java/com/rollncode/youtube/utility/
+Будет удалено src/main/res/drawable/
+Будет удалено src/main/res/menu/

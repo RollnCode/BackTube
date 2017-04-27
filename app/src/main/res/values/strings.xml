@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">YoutubeCustomView</string>
+    <string name="app_name">Youtube player</string>
+    <string name="close">Close</string>
+    <string name="show_playback">Show playback</string>
 </resources>

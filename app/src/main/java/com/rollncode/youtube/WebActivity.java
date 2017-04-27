@@ -21,7 +21,9 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 
-public class WebActivity extends AppCompatActivity implements ValueCallback<String> {
+@Deprecated
+public class WebActivity extends AppCompatActivity
+        implements ValueCallback<String> {
 
     /**
      * This is constants for tags and class names from youtube video html page, which must be clicked

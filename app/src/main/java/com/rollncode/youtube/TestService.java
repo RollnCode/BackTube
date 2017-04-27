@@ -16,7 +16,7 @@ import android.widget.Toast;
  * This is temporary service realization to experiment how works alert window
  * in this way
  */
-
+@Deprecated
 public class TestService extends Service {
 
     TestView mView;
@@ -56,6 +56,7 @@ public class TestService extends Service {
     }
 }
 
+@Deprecated
 class TestView extends ViewGroup {
     private Paint mLoadPaint;
 
