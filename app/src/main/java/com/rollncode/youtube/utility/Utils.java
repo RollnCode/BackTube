@@ -1,10 +1,10 @@
 package com.rollncode.youtube.utility;
 
+import android.content.IntentFilter;
 import android.net.Uri;
-import android.support.annotation.Nullable;
-import android.util.Log;
+import android.support.annotation.NonNull;
 
-import com.rollncode.youtube.service.PlayerService;
+import com.rollncode.youtube.types.LinkType;
 
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)
@@ -13,24 +13,22 @@ import com.rollncode.youtube.service.PlayerService;
 
 public class Utils {
 
-    public interface LinkType {
-        public static final String NORMAL = "youtube.com";
-        public static final String SHORT = "youtu.be";
-    }
-
-    public static String parse(Uri uri) {
+    @NonNull
+    public static String parse(String string) {
+        final Uri uri = Uri.parse(string);
         if (uri.getAuthority().equals(LinkType.SHORT)) {
             return uri.getLastPathSegment();
         }
         return uri.getQueryParameter("v");
     }
 
-    public static String parse(String string) {
-        return parse(Uri.parse(string));
-    }
-
-    public static void toLog(@Nullable String message) {
-        Log.d(PlayerService.class.getSimpleName(), ">>> " + message);
+    @NonNull
+    public static IntentFilter newIntentFilter(@NonNull String... actions) {
+        final IntentFilter filter = new IntentFilter();
+        for (String action : actions) {
+            filter.addAction(action);
+        }
+        return filter;
     }
 
 }

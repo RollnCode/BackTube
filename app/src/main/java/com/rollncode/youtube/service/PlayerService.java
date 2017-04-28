@@ -5,13 +5,21 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.webkit.WebView;
 
 import com.rollncode.youtube.R;
@@ -20,8 +28,6 @@ import com.rollncode.youtube.application.AContext;
 import com.rollncode.youtube.types.PlayerAction;
 import com.rollncode.youtube.utility.Utils;
 
-import java.util.Locale;
-
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)
  * @since 27.04.17
@@ -29,42 +35,50 @@ import java.util.Locale;
 
 public class PlayerService extends Service {
 
-    private static final String ACTION_OPEN = "ACTION_OPEN";
-    private static final String EXTRA_LINK = "EXTRA_LINK";
     private static final int NOTIFICATION_ID = 777;
+    private static final float DELTA = 0.275f;
 
-    private WindowManager.LayoutParams mParams;
+    private static final String FORMAT = "<iframe width=%1$d height=%2$d src=\"http://www.youtube.com/embed/%3$s\" frameborder=%4$d allowfullscreen></iframe>";
+    private static final String MIME_TYPE = "text/html; charset=utf-8";
+    private static final String ENCODING = "UTF-8";
+    private static final String YOUTUBE_LINK = "YOUTUBE_LINK";
+
+    private BroadcastReceiver mReceiver;
+    private LayoutParams mParams;
     private WebView mWebView;
     private int mWebViewSizePx;
     private WindowManager mWindowManager;
-    private int mWindowSizePx;
 
-    public void onCreate() {
-        super.onCreate();
-        mWindowSizePx = Math.min(Resources.getSystem().getDisplayMetrics().heightPixels, Resources.getSystem().getDisplayMetrics().widthPixels);
-        mWebViewSizePx = (int) (((float) mWindowSizePx) * 0.275f);
-        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-    }
-
-    private void initLayoutParams(boolean create) {
-        if (create) {
-            mParams = new WindowManager.LayoutParams(mWindowSizePx, mWindowSizePx, 2003, 288, -3);
-            mParams.gravity = 8388661;
-            mParams.y = AContext.getActionBarHeight() + AContext.getStatusBarHeight();
-            return;
-        }
-        mParams = null;
+    public static void start(@NonNull Context context, @NonNull String url) {
+        final Intent intent = new Intent(context, PlayerService.class);
+        intent.setAction(PlayerAction.START_YOUTUBE.getName());
+        intent.putExtra(YOUTUBE_LINK, url);
+        context.startService(intent);
     }
 
     @SuppressLint({"SetJavaScriptEnabled"})
-    @TargetApi(19)
-    private void initWebView() {
-        removeWebView();
-        mWebView = new WebView(getApplicationContext());
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        final int windowSizePx = Math.min(Resources.getSystem().getDisplayMetrics().heightPixels, Resources.getSystem().getDisplayMetrics().widthPixels);
+        mWebViewSizePx = (int) (((float) windowSizePx) * DELTA);
+        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        mParams = new LayoutParams(windowSizePx, windowSizePx, LayoutParams.TYPE_SYSTEM_ALERT, 288, PixelFormat.TRANSLUCENT);
+        mParams.gravity = Gravity.END | Gravity.TOP;
+        mParams.y = AContext.getActionBarHeight() + AContext.getStatusBarHeight();
+
+        mWebView = new WebView(this);
+        mWebView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent));
         mWebView.getSettings().setJavaScriptEnabled(true);
+
+        AContext.subscribeLocalReceiver(mReceiver = newBroadcastReceiver(),
+                PlayerAction.STOP_YOUTUBE.getName(),
+                PlayerAction.SHOW_YOUTUBE.getName(),
+                PlayerAction.HIDE_YOUTUBE.getName());
     }
 
-    @TargetApi(19)
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     private void removeWebView() {
         if (mWebView != null) {
             if (mWebView.isAttachedToWindow()) {
@@ -75,56 +89,40 @@ public class PlayerService extends Service {
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private void loadWebViewContent(String videoId, int frameBorder) {
-        mWebView.loadData(String.format(Locale.US, "<iframe width=%d height=%d src=\"http://www.youtube.com/embed/%s\" frameborder=%d allowfullscreen></iframe>", new Object[]{Integer.valueOf(this.mWebViewSizePx), Integer.valueOf(this.mWebViewSizePx), videoId, Integer.valueOf(frameBorder)}), "text/html; charset=utf-8", "UTF-8");
+        mWebView.loadData(String.format(FORMAT, mWebViewSizePx, mWebViewSizePx, videoId, frameBorder), MIME_TYPE, ENCODING);
     }
 
-    @TargetApi(19)
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getAction();
+        final String action = intent.getAction();
         if (action != null) {
             final PlayerAction playerAction = PlayerAction.get(action);
-            switch (playerAction) {
-                case START_YOUTUBE:
-                    String videoId = Utils.parse(intent.getStringExtra(EXTRA_LINK));
-                    Log.d("tagger", "SERVICE START_YOUTUBE");
-                    initWebView();
-                    initLayoutParams(true);
-                    mWindowManager.addView(mWebView, mParams);
-                    loadWebViewContent(videoId, 0);
-                    setUpAsForeground();
-                    break;
-
-                case STOP_YOUTUBE:
-                    Log.d("tagger", "SERVICE STOP_YOUTUBE");
-                    stopForeground(true);
-                    removeWebView();
-                    initLayoutParams(false);
-                    break;
-
-                case SHOW_YOUTUBE:
-                    Log.d("tagger", "SERVICE SHOW_YOUTUBE");
-                    if (!(mWebView == null || mWebView.isAttachedToWindow())) {
-                        initLayoutParams(true);
-                        mWindowManager.addView(mWebView, mParams);
-                        break;
-                    }
-                    break;
-
-                case HIDE_YOUTUBE:
-                    Log.d("tagger", "SERVICE HIDE_YOUTUBE");
-                    if (mWebView != null && mWebView.isAttachedToWindow()) {
-                        initLayoutParams(false);
-                        mWindowManager.removeView(mWebView);
-                        break;
-                    }
-                    break;
-
-                default:
-                    break;
+            if (playerAction.equals(PlayerAction.START_YOUTUBE)) {
+                final String videoId = Utils.parse(intent.getStringExtra(YOUTUBE_LINK));
+                Log.d("tagger", "SERVICE START_YOUTUBE");
+                mWindowManager.addView(mWebView, mParams);
+                loadWebViewContent(videoId, 0);
+                setUpAsForeground();
             }
         }
         return START_NOT_STICKY;
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private void showYoutubePlayer() {
+        if (!(mWebView == null || mWebView.isAttachedToWindow())) {
+            mWindowManager.addView(mWebView, mParams);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private void hideYoutubePlayer() {
+        if (mWebView != null && mWebView.isAttachedToWindow()) {
+            mWindowManager.removeView(mWebView);
+        }
     }
 
     @Nullable
@@ -134,7 +132,8 @@ public class PlayerService extends Service {
 
     private void setUpAsForeground() {
         final Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
-        intent.setAction(ACTION_OPEN);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setAction(PlayerAction.START_YOUTUBE.getName());
         startForeground(NOTIFICATION_ID, getNotification(intent));
     }
 
@@ -146,5 +145,40 @@ public class PlayerService extends Service {
                 .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                 .setOngoing(true)
                 .build();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        AContext.subscribeLocalReceiver(mReceiver);
+        mReceiver = null;
+    }
+
+    @NonNull
+    private BroadcastReceiver newBroadcastReceiver() {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                final PlayerAction playerAction = PlayerAction.get(action);
+                switch (playerAction) {
+                    case STOP_YOUTUBE:
+                        stopForeground(true);
+                        removeWebView();
+                        break;
+
+                    case SHOW_YOUTUBE:
+                        showYoutubePlayer();
+                        break;
+
+                    case HIDE_YOUTUBE:
+                        hideYoutubePlayer();
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        };
     }
 }

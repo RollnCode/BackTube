@@ -1,15 +1,20 @@
 package com.rollncode.youtube.application;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
 import android.view.WindowManager;
 
 import com.rollncode.youtube.R;
+import com.rollncode.youtube.utility.Utils;
 
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)
@@ -23,6 +28,7 @@ public class AContext {
     private final Point mScreenSize;
     private final int mActionBarHeight;
     private final Resources mResources;
+    private final LocalBroadcastManager mBroadcastManager;
 
     // SINGLETON
     private static AContext sInstance;
@@ -31,14 +37,12 @@ public class AContext {
         sInstance = new AContext(app);
     }
 
-    public static AContext getInstance() {
-        return sInstance;
-    }
-
     @SuppressLint("PrivateResource")
     private AContext(@NonNull App app) {
         mApp = app;
         mResources = mApp.getResources();
+        mBroadcastManager = LocalBroadcastManager.getInstance(app);
+
         {
             final WindowManager windowManager = (WindowManager) mApp.getSystemService(Context.WINDOW_SERVICE);
             mScreenSize = new Point();
@@ -72,5 +76,21 @@ public class AContext {
     public static int getStatusBarHeight() {
         int resourceId = sInstance.mResources.getIdentifier("status_bar_height", "dimen", "android");
         return resourceId > 0 ? sInstance.mResources.getDimensionPixelSize(resourceId) : 0;
+    }
+
+    public static void sendLocalBroadcast(@NonNull Intent intent) {
+        sInstance.mBroadcastManager.sendBroadcast(intent);
+    }
+
+    public static void subscribeLocalReceiver(@Nullable BroadcastReceiver receiver, @Nullable String... actions) {
+        if (receiver == null) {
+            return;
+        }
+        if (actions == null || actions.length == 0) {
+            sInstance.mBroadcastManager.unregisterReceiver(receiver);
+
+        } else {
+            sInstance.mBroadcastManager.registerReceiver(receiver, Utils.newIntentFilter(actions));
+        }
     }
 }
