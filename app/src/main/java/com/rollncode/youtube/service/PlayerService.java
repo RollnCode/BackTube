@@ -35,7 +35,7 @@ import com.rollncode.youtube.utility.Utils;
 public class PlayerService extends Service {
 
     private static final int NOTIFICATION_ID = 777;
-    private static final float DELTA = 0.275f;
+    private static final float DELTA = 0.3f;
 
     private static final String FORMAT = "<iframe width=%1$d height=%2$d src=\"http://www.youtube.com/embed/%3$s\" frameborder=%4$d allowfullscreen></iframe>";
     private static final String MIME_TYPE = "text/html; charset=utf-8";
@@ -60,15 +60,28 @@ public class PlayerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         final int windowSizePx = Math.min(Resources.getSystem().getDisplayMetrics().heightPixels, Resources.getSystem().getDisplayMetrics().widthPixels);
         mWebViewSizePx = (int) (((float) windowSizePx) * DELTA);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        mParams = new LayoutParams(windowSizePx, windowSizePx, LayoutParams.TYPE_SYSTEM_ALERT, 288, PixelFormat.TRANSLUCENT);
+        mParams = new LayoutParams(windowSizePx, windowSizePx,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+
+        );
+
         mParams.gravity = Gravity.END | Gravity.TOP;
         mParams.y = AContext.getActionBarHeight() + AContext.getStatusBarHeight();
 
-        mHideParams = new LayoutParams(1, 1, LayoutParams.TYPE_SYSTEM_ALERT, 288, PixelFormat.TRANSLUCENT);
+        mHideParams = new LayoutParams(1, 1,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+        );
 
         mWebView = new WebView(this);
         mWebView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent));
@@ -100,10 +113,12 @@ public class PlayerService extends Service {
             final PlayerAction playerAction = PlayerAction.get(action);
             if (playerAction.equals(PlayerAction.START_YOUTUBE)) {
                 final String videoId = Utils.parse(intent.getStringExtra(YOUTUBE_LINK));
-                mWindowManager.addView(mWebView, mParams);
-                loadWebViewContent(videoId, 0);
+                if (mWebView != null) {
+                    mWindowManager.addView(mWebView, mParams);
+                    loadWebViewContent(videoId, 0);
 
-                setUpAsForeground();
+                    setUpAsForeground();
+                }
             }
         }
         return START_NOT_STICKY;

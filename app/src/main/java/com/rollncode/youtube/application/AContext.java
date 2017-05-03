@@ -2,16 +2,13 @@ package com.rollncode.youtube.application;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Point;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
-import android.view.WindowManager;
 
 import com.rollncode.youtube.R;
 import com.rollncode.youtube.utility.Utils;
@@ -25,7 +22,6 @@ public class AContext {
 
     // VALUES
     private final App mApp;
-    private final Point mScreenSize;
     private final int mActionBarHeight;
     private final Resources mResources;
     private final LocalBroadcastManager mBroadcastManager;
@@ -43,12 +39,6 @@ public class AContext {
         mResources = mApp.getResources();
         mBroadcastManager = LocalBroadcastManager.getInstance(app);
 
-        {
-            final WindowManager windowManager = (WindowManager) mApp.getSystemService(Context.WINDOW_SERVICE);
-            mScreenSize = new Point();
-            windowManager.getDefaultDisplay().getSize(mScreenSize);
-        }
-
         final TypedValue value = new TypedValue();
         if (app.getTheme().resolveAttribute(R.attr.actionBarSize, value, true)) {
             mActionBarHeight = TypedValue.complexToDimensionPixelSize(value.data, mResources.getDisplayMetrics());
@@ -61,11 +51,6 @@ public class AContext {
     @NonNull
     public static App getApp() {
         return sInstance.mApp;
-    }
-
-    @NonNull
-    public static Point getScreenSize() {
-        return sInstance.mScreenSize;
     }
 
     @CheckResult
