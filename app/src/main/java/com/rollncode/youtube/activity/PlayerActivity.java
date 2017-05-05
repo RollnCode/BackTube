@@ -73,6 +73,7 @@ public class PlayerActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    // TODO: why public? You also do no need the method which is used just in one place
     public void checkPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             startYoutube();
