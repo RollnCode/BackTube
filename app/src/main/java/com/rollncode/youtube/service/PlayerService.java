@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -62,28 +63,20 @@ public class PlayerService extends Service {
         super.onCreate();
 
         // TODO: save getDisplayMetrics() to local variable and use it
-        final int windowSizePx = Math.min(Resources.getSystem().getDisplayMetrics().heightPixels, Resources.getSystem().getDisplayMetrics().widthPixels);
+        // TODO cr: fixed
+        final DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+        final int windowSizePx = Math.min(metrics.heightPixels, metrics.widthPixels);
         mWebViewSizePx = (int) (((float) windowSizePx) * DELTA);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         // TODO: make a private method for initialize mParams and mHideParams where send windowSizePx or 1 as parameter
-        mParams = new LayoutParams(windowSizePx, windowSizePx,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.TRANSLUCENT
-
-        );
+        // TODO cr: fixed
+        mParams = initLayoutParams(windowSizePx);
 
         mParams.gravity = Gravity.END | Gravity.TOP;
         mParams.y = AContext.getActionBarHeight() + AContext.getStatusBarHeight();
 
-        mHideParams = new LayoutParams(1, 1,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.TRANSLUCENT
-        );
+        mHideParams = initLayoutParams(1);
 
         mWebView = new WebView(this);
         mWebView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent));
@@ -107,6 +100,16 @@ public class PlayerService extends Service {
         mReceiver = null;
     }
 
+    @NonNull
+    private LayoutParams initLayoutParams(int windowSizePx) {
+        return new LayoutParams(windowSizePx, windowSizePx,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+        );
+    }
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -117,10 +120,17 @@ public class PlayerService extends Service {
                 final String videoId = Utils.parse(intent.getStringExtra(YOUTUBE_LINK));
                 if (mWebView != null) {
                     // TODO: "has already been added to the window manager" exception after rotating the device
+                    // TODO cr: fixed
+                    if (mWebView.isAttachedToWindow()) {
+                        mWindowManager.removeView(mWebView);
+                    }
                     mWindowManager.addView(mWebView, mParams);
                     loadWebViewContent(videoId, 0);
 
-                    setUpAsForeground();
+                    final Intent i = new Intent(getApplicationContext(), PlayerActivity.class);
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    i.setAction(PlayerAction.START_YOUTUBE.getName());
+                    startForeground(NOTIFICATION_ID, getNotification(i));
                 }
             }
         }
@@ -132,23 +142,26 @@ public class PlayerService extends Service {
         mWebView.loadData(String.format(FORMAT, mWebViewSizePx, mWebViewSizePx, videoId, frameBorder), MIME_TYPE, ENCODING);
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     private void showYoutubePlayer() {
         // TODO: make private method where check adding mParams or mHideParams to addView
         // TODO: use this method in showYoutubePlayer and hideYoutubePlayer
-        if (mWebView != null && mWebView.isAttachedToWindow()) {
+        // TODO cr: fixed
+        if (isValidateWebview()) {
             mWindowManager.removeView(mWebView);
             mWindowManager.addView(mWebView, mParams);
         }
-
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     private void hideYoutubePlayer() {
-        if (mWebView != null && mWebView.isAttachedToWindow()) {
+        if (isValidateWebview()) {
             mWindowManager.removeView(mWebView);
             mWindowManager.addView(mWebView, mHideParams);
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private boolean isValidateWebview() {
+        return mWebView != null && mWebView.isAttachedToWindow();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -160,14 +173,6 @@ public class PlayerService extends Service {
             mWebView.destroy();
             mWebView = null;
         }
-    }
-
-    // TODO: this method is used only once. You do not need this method
-    private void setUpAsForeground() {
-        final Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.setAction(PlayerAction.START_YOUTUBE.getName());
-        startForeground(NOTIFICATION_ID, getNotification(intent));
     }
 
     private Notification getNotification(Intent intent) {
@@ -186,6 +191,7 @@ public class PlayerService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
                 // FIXME: "AudioManager dispatching onAudioFocusChange(-1) for" when shut the screen down if browser is visible
+                // TODO cr: cannot reproduce
                 final String action = intent.getAction();
                 final PlayerAction playerAction = PlayerAction.get(action);
                 switch (playerAction) {

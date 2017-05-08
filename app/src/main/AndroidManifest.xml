@@ -18,7 +18,9 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name="com.rollncode.youtube.activity.PlayerActivity">
+            android:name="com.rollncode.youtube.activity.PlayerActivity"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -36,7 +38,6 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="text/plain"/>
             </intent-filter>
-
         </activity>
 
         <service
@@ -50,7 +51,5 @@
                 <action android:name="com.kkx.player.ACTION_STOP_YOUTUBE"/>
             </intent-filter>
         </service>
-
     </application>
-
 </manifest>
