@@ -62,17 +62,12 @@ public class PlayerService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // TODO: save getDisplayMetrics() to local variable and use it
-        // TODO cr: fixed
         final DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         final int windowSizePx = Math.min(metrics.heightPixels, metrics.widthPixels);
         mWebViewSizePx = (int) (((float) windowSizePx) * DELTA);
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        // TODO: make a private method for initialize mParams and mHideParams where send windowSizePx or 1 as parameter
-        // TODO cr: fixed
         mParams = initLayoutParams(windowSizePx);
-
         mParams.gravity = Gravity.END | Gravity.TOP;
         mParams.y = AContext.getActionBarHeight() + AContext.getStatusBarHeight();
 
@@ -119,8 +114,6 @@ public class PlayerService extends Service {
             if (playerAction.equals(PlayerAction.START_YOUTUBE)) {
                 final String videoId = Utils.parse(intent.getStringExtra(YOUTUBE_LINK));
                 if (mWebView != null) {
-                    // TODO: "has already been added to the window manager" exception after rotating the device
-                    // TODO cr: fixed
                     if (mWebView.isAttachedToWindow()) {
                         mWindowManager.removeView(mWebView);
                     }
@@ -143,9 +136,6 @@ public class PlayerService extends Service {
     }
 
     private void showYoutubePlayer() {
-        // TODO: make private method where check adding mParams or mHideParams to addView
-        // TODO: use this method in showYoutubePlayer and hideYoutubePlayer
-        // TODO cr: fixed
         if (isValidateWebview()) {
             mWindowManager.removeView(mWebView);
             mWindowManager.addView(mWebView, mParams);
@@ -190,8 +180,6 @@ public class PlayerService extends Service {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                // FIXME: "AudioManager dispatching onAudioFocusChange(-1) for" when shut the screen down if browser is visible
-                // TODO cr: cannot reproduce
                 final String action = intent.getAction();
                 final PlayerAction playerAction = PlayerAction.get(action);
                 switch (playerAction) {
