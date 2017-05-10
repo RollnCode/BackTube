@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BackTube</string>
+    <string name="app_name" translatable="false">BackTube</string>
     
     <string name="Close">Close</string>
     <string name="Show_application">Show application</string>

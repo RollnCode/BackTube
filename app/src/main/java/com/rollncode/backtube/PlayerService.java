@@ -1,4 +1,4 @@
-package com.rollncode.backtube.service;
+package com.rollncode.backtube;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
@@ -27,8 +27,6 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.webkit.WebView;
 
-import com.rollncode.backtube.R;
-import com.rollncode.backtube.activity.PlayerActivity;
 import com.rollncode.backtube.type.LinkType;
 import com.rollncode.backtube.type.ServiceAction;
 
@@ -38,10 +36,9 @@ import java.util.Locale;
  * @author Chekashov R.(email:roman_woland@mail.ru)
  * @since 27.04.17
  */
-
 public final class PlayerService extends Service {
 
-    private static final int NOTIFICATION_ID = 777;
+    private static final int NOTIFICATION_ID = 0xA;
     private static final float FACTOR = 0.3F;
 
     private static final String FORMAT = "<iframe width=%1$d height=%2$d src=\"http://www.youtube.com/embed/%3$s\" frameborder=%4$d allowfullscreen></iframe>";
@@ -69,14 +66,14 @@ public final class PlayerService extends Service {
         super.onCreate();
 
         final DisplayMetrics metrics = getResources().getDisplayMetrics();
-        final int minSidePx = Math.min(metrics.heightPixels, metrics.widthPixels);
-        mWebViewSizePx = (int) (minSidePx * FACTOR);
+        final int minSide = Math.min(metrics.heightPixels, metrics.widthPixels);
+        mWebViewSizePx = (int) (minSide * FACTOR);
         {
             mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
             mHideParams = newLayoutParams(1);
 
-            mParams = newLayoutParams(minSidePx);
+            mParams = newLayoutParams(minSide);
             mParams.gravity = Gravity.END | Gravity.TOP;
             mParams.y = getTopY(metrics);
         }

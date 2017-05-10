@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
         
         <activity
-            android:name="com.rollncode.backtube.activity.PlayerActivity"
+            android:name="com.rollncode.backtube.PlayerActivity"
             android:screenOrientation="portrait">
             
             <intent-filter>
@@ -44,6 +44,6 @@
             </intent-filter>
         </activity>
         
-        <service android:name="com.rollncode.backtube.service.PlayerService"/>
+        <service android:name="com.rollncode.backtube.PlayerService"/>
     </application>
 </manifest>

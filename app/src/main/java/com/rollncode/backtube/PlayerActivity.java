@@ -1,4 +1,4 @@
-package com.rollncode.backtube.activity;
+package com.rollncode.backtube;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -14,8 +14,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.rollncode.backtube.R;
-import com.rollncode.backtube.service.PlayerService;
 import com.rollncode.backtube.type.LinkType;
 import com.rollncode.backtube.type.ServiceAction;
 
