@@ -1,0 +1,51 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+
+    compileOptions {
+        encoding "UTF-8"
+
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        applicationId "com.rollncode.backtube"
+
+        minSdkVersion 9
+        targetSdkVersion 25
+
+        versionCode 1
+        versionName "1"
+
+        jackOptions {
+            enabled true
+        }
+    }
+    buildTypes {
+        debug {
+            versionNameSuffix new Date().format("'.$defaultConfig.versionCode:'MMdd-HH-")
+
+            debuggable true
+        }
+        release {
+            versionNameSuffix new Date().format("'.$defaultConfig.versionCode:'MMdd-HH")
+
+            debuggable false
+            minifyEnabled true
+//            shrinkResources true //commented because of nothing to shrink
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
+}
+
+dependencies {
+    compile "com.android.support:appcompat-v7:25.3.1"
+}
