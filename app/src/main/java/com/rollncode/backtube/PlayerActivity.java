@@ -37,7 +37,7 @@ public final class PlayerActivity extends AppCompatActivity {
             }
             super.finish();
 
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+        } else if (Build.VERSION.SDK_INT < VERSION_CODES.M || Settings.canDrawOverlays(this)) {
             startService();
 
         } else {
