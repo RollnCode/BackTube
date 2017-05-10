@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="com.rollncode.youtube"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.rollncode.backtube">
+    
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-
+    
     <application
-        android:name=".application.App"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
-
+        android:theme="@style/AppTheme">
+        
         <activity
-            android:name="com.rollncode.youtube.activity.PlayerActivity"
+            android:name="com.rollncode.backtube.activity.PlayerActivity"
             android:screenOrientation="portrait">
-
+            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
-
+                
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-
+                
                 <data
                     android:host="www.youtube.com"
+                    android:scheme="https"/>
+                <data
+                    android:host="youtube.com"
+                    android:scheme="https"/>
+                <data
+                    android:host="youtu.be"
                     android:scheme="https"/>
             </intent-filter>
             <intent-filter>
@@ -39,17 +43,7 @@
                 <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".service.PlayerService"
-            android:exported="false">
-
-            <intent-filter>
-                <action android:name="com.kkx.player.ACTION_START_YOUTUBE"/>
-                <action android:name="com.kkx.player.ACTION_HIDE_YOUTUBE"/>
-                <action android:name="com.kkx.player.ACTION_SHOW_YOUTUBE"/>
-                <action android:name="com.kkx.player.ACTION_STOP_YOUTUBE"/>
-            </intent-filter>
-        </service>
+        
+        <service android:name="com.rollncode.backtube.service.PlayerService"/>
     </application>
 </manifest>

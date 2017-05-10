@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">Youtube player</string>
-    <string name="close">Close</string>
-    <string name="show_playback">Show playback</string>
+    <string name="app_name">BackTube</string>
+    
+    <string name="Close">Close</string>
+    <string name="Show_application">Show application</string>
 </resources>
