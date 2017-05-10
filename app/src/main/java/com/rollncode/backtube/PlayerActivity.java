@@ -3,14 +3,13 @@ package com.rollncode.backtube;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -30,19 +29,24 @@ public final class PlayerActivity extends AppCompatActivity {
         super.onCreate(b);
 
         final Intent intent = super.getIntent();
-        if (intent != null && Intent.ACTION_MAIN.equals(intent.getAction()) && !intent.getBooleanExtra(Intent.EXTRA_LOCAL_ONLY, false)) {
+        if (intent != null && Intent.ACTION_MAIN.equals(intent.getAction()) && !intent.getBooleanExtra(Intent.EXTRA_INTENT, false)) {
             final Intent youtube = new Intent(Intent.ACTION_MAIN).setPackage("com.google.android.youtube").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             if (youtube.resolveActivity(getPackageManager()) != null) {
                 super.startActivity(youtube);
             }
             super.finish();
 
-        } else if (Build.VERSION.SDK_INT < VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+        } else if (canDrawOverlays()) {
             startService();
 
         } else {
             super.startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), REQUEST_OVERLAY_PERMISSION);
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
     }
 
     @Override
@@ -79,7 +83,7 @@ public final class PlayerActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_OVERLAY_PERMISSION:
-                if (VERSION.SDK_INT < VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+                if (canDrawOverlays()) {
                     startService();
 
                 } else {
@@ -95,7 +99,7 @@ public final class PlayerActivity extends AppCompatActivity {
 
     private void startService() {
         final Intent intent = super.getIntent();
-        if (intent == null || intent.getBooleanExtra(Intent.EXTRA_LOCAL_ONLY, false)) {
+        if (intent == null || intent.getBooleanExtra(Intent.EXTRA_INTENT, false)) {
             serviceAction(ServiceAction.SHOW);
             return;
         }
@@ -104,7 +108,10 @@ public final class PlayerActivity extends AppCompatActivity {
             startService(uri);
 
         } else if (intent.hasExtra(Intent.EXTRA_TEXT)) {
-            startService(intent.getStringExtra(Intent.EXTRA_TEXT));
+            final String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (!TextUtils.isEmpty(text) && !text.startsWith("http") && text.contains(LinkType.NORMAL) || text.contains(LinkType.SHORT)) {
+                startService(text.substring(text.indexOf("http")));
+            }
 
         } else {
             super.finish();
@@ -116,9 +123,13 @@ public final class PlayerActivity extends AppCompatActivity {
     }
 
     private void overlayServiceAction(@ServiceAction String action) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+        if (canDrawOverlays()) {
             serviceAction(action);
         }
+    }
+
+    private boolean canDrawOverlays() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
     }
 
     private void serviceAction(@ServiceAction String action) {

@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId "com.rollncode.backtube"
 
-        minSdkVersion 16
+        minSdkVersion 9
         targetSdkVersion 25
 
         versionCode 1

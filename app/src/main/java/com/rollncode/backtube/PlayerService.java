@@ -39,7 +39,6 @@ import java.util.Locale;
 public final class PlayerService extends Service {
 
     private static final int NOTIFICATION_ID = 0xA;
-    private static final float FACTOR = 0.3F;
 
     private static final String FORMAT = "<iframe width=%1$d height=%2$d src=\"http://www.youtube.com/embed/%3$s\" frameborder=%4$d allowfullscreen></iframe>";
     private static final String MIME_TYPE = "text/html; charset=utf-8";
@@ -66,18 +65,21 @@ public final class PlayerService extends Service {
         super.onCreate();
 
         final DisplayMetrics metrics = getResources().getDisplayMetrics();
-        final int minSide = Math.min(metrics.heightPixels, metrics.widthPixels);
-        mWebViewSizePx = (int) (minSide * FACTOR);
+        final int min = Math.min(metrics.heightPixels, metrics.widthPixels);
+
+        mWebViewSizePx = (int) (min / metrics.density);
         {
             mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
             mHideParams = newLayoutParams(1);
 
-            mParams = newLayoutParams(minSide);
+            mParams = newLayoutParams(min);
             mParams.gravity = Gravity.END | Gravity.TOP;
             mParams.y = getTopY(metrics);
         }
         mWebView = new WebView(this);
+        mWebView.setVerticalScrollBarEnabled(false);
+        mWebView.setHorizontalScrollBarEnabled(false);
         mWebView.setBackgroundColor(Color.TRANSPARENT);
         mWebView.getSettings().setJavaScriptEnabled(true);
         {
@@ -102,13 +104,9 @@ public final class PlayerService extends Service {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         super.stopForeground(true);
 
-        if (mWebView != null) {
-            if (VERSION.SDK_INT >= VERSION_CODES.KITKAT && mWebView.isAttachedToWindow()) {
-                mWindowManager.removeView(mWebView);
-            }
-            mWebView.destroy();
-            mWebView = null;
-        }
+        resetView(null);
+        mWebView.destroy();
+        mWebView = null;
     }
 
     @SuppressLint("PrivateResource")
@@ -146,21 +144,21 @@ public final class PlayerService extends Service {
                 case ServiceAction.START:
                     final String videoId = getVideoId(intent.getStringExtra(Intent.EXTRA_STREAM));
                     if (mWebView != null) {
-                        if (VERSION.SDK_INT >= VERSION_CODES.KITKAT && mWebView.isAttachedToWindow()) {
-                            mWindowManager.removeView(mWebView);
-                        }
-                        mWindowManager.addView(mWebView, mParams);
+                        resetView(mParams);
                         mWebView.loadData(String.format(Locale.ENGLISH, FORMAT, mWebViewSizePx, mWebViewSizePx, videoId, 0), MIME_TYPE, ENCODING);
                         {
-                            intent = new Intent(this, PlayerActivity.class).putExtra(Intent.EXTRA_LOCAL_ONLY, true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            intent = new Intent(this, PlayerActivity.class).putExtra(Intent.EXTRA_INTENT, true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                            PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                            pi = pi != null ? pi : PendingIntent.getActivity(this, 0, intent, 0);
 
                             super.startForeground(NOTIFICATION_ID, new Builder(this)
-                                    .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                                     .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
                                     .setContentText(getString(R.string.Show_application))
                                     .setCategory(NotificationCompat.CATEGORY_SERVICE)
                                     .setContentTitle(getString(R.string.app_name))
                                     .setSmallIcon(R.drawable.svg_play)
+                                    .setContentIntent(pi)
                                     .setOngoing(true)
                                     .build());
                         }
@@ -177,14 +175,28 @@ public final class PlayerService extends Service {
         return START_NOT_STICKY;
     }
 
-    @CheckResult
+    @Nullable
     private static String getVideoId(@NonNull String string) {
         final Uri uri = Uri.parse(string);
         return LinkType.SHORT.equals(uri.getAuthority()) ? uri.getLastPathSegment() : uri.getQueryParameter("v");
     }
 
     private boolean isAttachedToWindow() {
-        return mWebView != null && VERSION.SDK_INT >= VERSION_CODES.KITKAT && mWebView.isAttachedToWindow();
+        return mWebView != null && (VERSION.SDK_INT < VERSION_CODES.KITKAT ? mWebView.getParent() != null : mWebView.isAttachedToWindow());
+    }
+
+    private void resetView(@Nullable LayoutParams params) {
+        if (isAttachedToWindow()) {
+            try {
+                mWindowManager.removeView(mWebView);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (params != null) {
+            mWindowManager.addView(mWebView, params);
+        }
     }
 
     @CheckResult
@@ -195,15 +207,13 @@ public final class PlayerService extends Service {
                 switch (intent.getAction()) {
                     case ServiceAction.HIDE:
                         if (isAttachedToWindow()) {
-                            mWindowManager.removeView(mWebView);
-                            mWindowManager.addView(mWebView, mHideParams);
+                            resetView(mHideParams);
                         }
                         break;
 
                     case ServiceAction.SHOW:
                         if (isAttachedToWindow()) {
-                            mWindowManager.removeView(mWebView);
-                            mWindowManager.addView(mWebView, mParams);
+                            resetView(mParams);
                         }
                         break;
 
