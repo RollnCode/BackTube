@@ -45,11 +45,6 @@ public final class PlayerActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         overlayServiceAction(ServiceAction.SHOW);
@@ -103,19 +98,20 @@ public final class PlayerActivity extends AppCompatActivity {
             serviceAction(ServiceAction.SHOW);
             return;
         }
-        final String uri = intent.getDataString();
+        String uri = intent.getDataString();
         if (uri != null && (uri.contains(LinkType.NORMAL) || uri.contains(LinkType.SHORT))) {
             startService(uri);
-
-        } else if (intent.hasExtra(Intent.EXTRA_TEXT)) {
-            final String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-            if (!TextUtils.isEmpty(text) && !text.startsWith("http") && text.contains(LinkType.NORMAL) || text.contains(LinkType.SHORT)) {
-                startService(text.substring(text.indexOf("http")));
-            }
-
-        } else {
-            super.finish();
+            return;
         }
+        uri = intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (!TextUtils.isEmpty(uri)) {
+            if (!uri.startsWith("http") && (uri.contains(LinkType.NORMAL) || uri.contains(LinkType.SHORT))) {
+                uri = uri.substring(uri.indexOf("http"));
+            }
+            startService(uri);
+            return;
+        }
+        super.finish();
     }
 
     private void startService(@NonNull String url) {
