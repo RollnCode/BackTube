@@ -10,8 +10,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.os.IBinder;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
@@ -23,6 +21,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.webkit.WebView;
@@ -40,7 +39,7 @@ public final class PlayerService extends Service {
 
     private static final int NOTIFICATION_ID = 0xA;
 
-    private static final String FORMAT = "<iframe width=%1$d height=%2$d src=\"http://www.youtube.com/embed/%3$s\" frameborder=%4$d allowfullscreen></iframe>";
+    private static final String FORMAT = "<iframe id=\"ytplayer\" type=\"text/html\" width=\"%2$d\" height=\"%2$d\" frameborder=\"0\" src=\"http://www.youtube.com/embed%1$s\"/>";
     private static final String MIME_TYPE = "text/html; charset=utf-8";
     private static final String ENCODING = "UTF-8";
 
@@ -50,7 +49,7 @@ public final class PlayerService extends Service {
     private LayoutParams mHideParams;
     private LayoutParams mParams;
 
-    private int mWebViewSizePx;
+    private int mPlayerSize;
     private WebView mWebView;
 
     public static void start(@NonNull Context context, @NonNull String url) {
@@ -64,32 +63,31 @@ public final class PlayerService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        final DisplayMetrics metrics = getResources().getDisplayMetrics();
-        final int min = Math.min(metrics.heightPixels, metrics.widthPixels);
-
-        mWebViewSizePx = (int) (min / metrics.density);
-        {
-            mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
-            mHideParams = newLayoutParams(1);
-
-            mParams = newLayoutParams(min);
-            mParams.gravity = Gravity.END | Gravity.TOP;
-            mParams.y = getTopY(metrics);
-        }
         mWebView = new WebView(this);
         mWebView.setVerticalScrollBarEnabled(false);
         mWebView.setHorizontalScrollBarEnabled(false);
         mWebView.setBackgroundColor(Color.TRANSPARENT);
         mWebView.getSettings().setJavaScriptEnabled(true);
         {
-            final IntentFilter filter = new IntentFilter();
-            filter.addAction(ServiceAction.STOP);
-            filter.addAction(ServiceAction.SHOW);
-            filter.addAction(ServiceAction.HIDE);
+            mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-            LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver = newBroadcastReceiver(), filter);
+            mHideParams = newLayoutParams(1);
+
+            final DisplayMetrics metrics = getResources().getDisplayMetrics();
+            final int min = Math.min(metrics.heightPixels, metrics.widthPixels);
+
+            mPlayerSize = (int) (min / metrics.density);
+
+            mParams = newLayoutParams(min);
+            mParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
+            mParams.y = getTopY(metrics);
         }
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(ServiceAction.STOP);
+        filter.addAction(ServiceAction.SHOW);
+        filter.addAction(ServiceAction.HIDE);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver = newBroadcastReceiver(), filter);
     }
 
     @Nullable
@@ -104,7 +102,7 @@ public final class PlayerService extends Service {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         super.stopForeground(true);
 
-        resetView(null);
+        resetViewParams(null);
         mWebView.destroy();
         mWebView = null;
     }
@@ -142,28 +140,42 @@ public final class PlayerService extends Service {
         if (action != null) {
             switch (action) {
                 case ServiceAction.START:
-                    final String videoId = getVideoId(intent.getStringExtra(Intent.EXTRA_STREAM));
-                    if (mWebView != null) {
-                        resetView(mParams);
-                        mWebView.loadData(String.format(Locale.ENGLISH, FORMAT, mWebViewSizePx, mWebViewSizePx, videoId, 0), MIME_TYPE, ENCODING);
-                        {
-                            intent = new Intent(this, PlayerActivity.class).putExtra(Intent.EXTRA_INTENT, true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-                            PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                            pi = pi != null ? pi : PendingIntent.getActivity(this, 0, intent, 0);
-
-                            super.startForeground(NOTIFICATION_ID, new Builder(this)
-                                    .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
-                                    .setContentText(getString(R.string.Show_application))
-                                    .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                                    .setContentTitle(getString(R.string.app_name))
-                                    .setSmallIcon(R.drawable.svg_play)
-                                    .setContentIntent(pi)
-                                    .setOngoing(true)
-                                    .build());
-                        }
+                    if (mWebView == null) {
+                        throw new IllegalStateException();
                     }
-                    break;
+                    final Uri uri = Uri.parse(intent.getStringExtra(Intent.EXTRA_STREAM));
+                    final String videoId = getVideoId(uri);
+
+                    final String suffix;
+                    if (videoId == null) {
+                        suffix = "/nsDjNnFlFYE";
+
+                    } else if (videoId.startsWith("PL")) {
+                        suffix = "?listType=playlist&list=" + videoId;
+
+                    } else {
+                        final String startTime = getStartTime(uri);
+                        suffix = "/" + videoId + (startTime == null ? "" : "?start=" + startTime);
+                    }
+                    resetViewParams(mParams);
+                    mWebView.loadData(String.format(Locale.ENGLISH, FORMAT, suffix, mPlayerSize), MIME_TYPE, ENCODING);
+                {
+                    intent = new Intent(this, PlayerActivity.class).putExtra(Intent.EXTRA_INTENT, true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                    PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    pi = pi != null ? pi : PendingIntent.getActivity(this, 0, intent, 0);
+
+                    super.startForeground(NOTIFICATION_ID, new Builder(this)
+                            .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
+                            .setContentText(getString(R.string.Show_application))
+                            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                            .setContentTitle(getString(R.string.app_name))
+                            .setSmallIcon(R.drawable.svg_play)
+                            .setContentIntent(pi)
+                            .setOngoing(true)
+                            .build());
+                }
+                break;
 
                 case ServiceAction.HIDE:
                 case ServiceAction.SHOW:
@@ -176,26 +188,29 @@ public final class PlayerService extends Service {
     }
 
     @Nullable
-    private static String getVideoId(@NonNull String string) {
-        final Uri uri = Uri.parse(string);
-        return LinkType.SHORT.equals(uri.getAuthority()) ? uri.getLastPathSegment() : uri.getQueryParameter("v");
+    private static String getVideoId(@NonNull Uri uri) {
+        final String videoId = LinkType.SHORT.equals(uri.getAuthority()) ? uri.getLastPathSegment() : uri.getQueryParameter("v");
+        return videoId != null ? videoId : uri.getQueryParameter("list");
     }
 
-    private boolean isAttachedToWindow() {
-        return mWebView != null && (VERSION.SDK_INT < VERSION_CODES.KITKAT ? mWebView.getParent() != null : mWebView.isAttachedToWindow());
+    @Nullable
+    public static String getStartTime(@NonNull Uri uri) {
+        return uri.getQueryParameter("t");
     }
 
-    private void resetView(@Nullable LayoutParams params) {
-        if (isAttachedToWindow()) {
-            try {
-                mWindowManager.removeView(mWebView);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    private void resetViewParams(@Nullable LayoutParams params) {
+        if (mWebView == null) {
+            return;
         }
-        if (params != null) {
+        final ViewGroup.LayoutParams layoutParams = mWebView.getLayoutParams();
+        if (layoutParams == null) {
             mWindowManager.addView(mWebView, params);
+
+        } else if (params == null) {
+            mWindowManager.removeView(mWebView);
+
+        } else if (layoutParams != params) {
+            mWindowManager.updateViewLayout(mWebView, params);
         }
     }
 
@@ -206,15 +221,11 @@ public final class PlayerService extends Service {
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
                     case ServiceAction.HIDE:
-                        if (isAttachedToWindow()) {
-                            resetView(mHideParams);
-                        }
+                        resetViewParams(mHideParams);
                         break;
 
                     case ServiceAction.SHOW:
-                        if (isAttachedToWindow()) {
-                            resetView(mParams);
-                        }
+                        resetViewParams(mParams);
                         break;
 
                     case ServiceAction.STOP:
