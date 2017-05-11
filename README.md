@@ -5,7 +5,7 @@ This application allows to listen videos from YouTube that is not required to lo
 
 Because of [Device and Network Abuse](https://play.google.com/about/privacy-security/device-network-abuse/) policy, Google Play rejected this app, but you can find it below.
 
-## [The latest APK file checkout here.](https://github.com/RollnCode/BackTube/releases/tag/1.0511-12)
+## [The latest APK file checkout here.](https://github.com/RollnCode/BackTube/releases)
 
 # How to use the App
 
