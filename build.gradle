@@ -1,13 +1,19 @@
 buildscript {
+    ext.vSupport = "28.0.0"
+    ext.vKotlin = "1.2.71"
+
     repositories {
+        google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
+        classpath "com.android.tools.build:gradle:3.2.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$vKotlin"
     }
 }
 allprojects {
     repositories {
+        google()
         jcenter()
     }
 }
