@@ -13,6 +13,8 @@ import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.IBinder
+import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
 import android.view.Gravity
@@ -109,7 +111,7 @@ class TubeService : Service(),
                     if (id.isNullOrEmpty())
                         id = uri.lastPathSegment
 
-                    if (id?.isNotBlank() == true) {
+                    if (id?.isNotBlank() == true && !id.contains("list")) {
                         if (videoId == id) {
                             return super.onStartCommand(intent, flags, startId)
 
@@ -128,7 +130,6 @@ class TubeService : Service(),
 
                 } else {
                     ReceiverBus.notify(TubeState.STOP)
-                    ReceiverBus.notify(TubeState.CLOSE_APP)
                 }
             }
         }
@@ -142,16 +143,19 @@ class TubeService : Service(),
         super.stopForeground(true)
 
         videoId = ""
+        TubeState.windowShowed = false
+
         ReceiverBus.unSubscribe(this, *events)
+        ReceiverBus.notify(TubeState.CLOSE_APP)
 
         attempt {
-            player?.pause()
             player?.removeListener(this)
+            player?.pause()
             player = null
         }
         attempt {
-            wm.removeViewImmediate(view)
             view.release()
+            wm.removeViewImmediate(view)
         }
         toLog("onDestroy")
     }
@@ -180,6 +184,7 @@ class TubeService : Service(),
             }
             TubeState.WINDOW_SHOW -> {
                 toLog("WINDOW_SHOW")
+                TubeState.windowShowed = true
 
                 if (view.layoutParams == null)
                     wm.addView(view, showParams)
@@ -188,6 +193,7 @@ class TubeService : Service(),
             }
             TubeState.WINDOW_HIDE -> {
                 toLog("WINDOW_HIDE")
+                TubeState.windowShowed = false
 
                 if (view.layoutParams == null)
                     wm.addView(view, hideParams)
@@ -215,46 +221,47 @@ class TubeService : Service(),
         ReceiverBus.notify(TubeState.PLAY)
     }
 
-    override fun onPlaybackQualityChange(playbackQuality: PlaybackQuality) =
-            toLog("onPlaybackQualityChange: $playbackQuality", "pLog")
+    override fun onStateChange(state: PlayerState) {
+        when (state) {
+            PlayerState.PLAYING -> startForeground {
+                setSmallIcon(R.drawable.notification_play)
 
-    override fun onVideoDuration(duration: Float) =
-            toLog("onVideoDuration: $duration", "pLog")
+                addAction(R.drawable.svg_pause, R.string.pause, TubeState.ACTION_PAUSE)
+                addAction(R.drawable.svg_toggle, R.string.toggle, TubeState.ACTION_TOGGLE)
+            }
+            PlayerState.PAUSED  -> startForeground {
+                setSmallIcon(R.drawable.notification_pause)
 
-    override fun onCurrentSecond(second: Float) =
-            toLog("onCurrentSecond: $second", "pLog")
+                addAction(R.drawable.svg_play, R.string.play, TubeState.ACTION_PLAY)
+                addAction(R.drawable.svg_close, R.string.close, TubeState.ACTION_CLOSE)
+            }
+            else                -> toLog("onStateChange: $state", "pLog")
+        }
+    }
 
-    override fun onVideoLoadedFraction(loadedFraction: Float) =
-            toLog("onVideoLoadedFraction: $loadedFraction", "pLog")
+    override fun onPlaybackQualityChange(playbackQuality: PlaybackQuality) = Unit
+    override fun onVideoDuration(duration: Float) = Unit
+    override fun onCurrentSecond(second: Float) = Unit
+    override fun onVideoLoadedFraction(loadedFraction: Float) = Unit
+    override fun onPlaybackRateChange(playbackRate: PlaybackRate) = Unit
+    override fun onVideoId(videoId: String) = Unit
+    override fun onApiChange() = Unit
+    override fun onError(error: PlayerError) = Unit
 
-    override fun onPlaybackRateChange(playbackRate: PlaybackRate) =
-            toLog("onPlaybackRateChange: $playbackRate", "pLog")
-
-    override fun onVideoId(videoId: String) =
-            toLog("onVideoId: $videoId", "pLog")
-
-    override fun onApiChange() =
-            toLog("onApiChange", "pLog")
-
-    override fun onError(error: PlayerError) =
-            toLog("onError: $error", "pLog")
-
-    override fun onStateChange(state: PlayerState) =
-            toLog("onStateChange: $state", "pLog")
-
-    private fun startForeground(block: (builder: NotificationCompat.Builder) -> Unit = {}) =
+    private fun startForeground(block: NotificationCompat.Builder.() -> Unit = {}) =
             NotificationCompat.Builder(this, createNotificationChannel())
                 .setSmallIcon(R.drawable.notification_play)
                 .setContentTitle(getString(R.string.app_name))
                 .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
                 .setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
 
+                .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setContentIntent(TubeActivity.newInstance(this).toPending(this))
+                .setContentIntent(TubeActivity.newInstance(this).toPendingActivity(this))
 
                 .run {
-                    block(this)
+                    block.invoke(this)
                     super.startForeground(0xA, build())
                 }
 
@@ -281,4 +288,14 @@ class TubeService : Service(),
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT)
+
+    private fun NotificationCompat.Builder.addAction(@DrawableRes drawableRes: Int,
+                                                     @StringRes stringRes: Int,
+                                                     action: String
+                                                    ) = addAction(
+            NotificationCompat.Action.Builder(
+                    drawableRes,
+                    getString(stringRes),
+                    Intent(action).toPendingBroadcast(applicationContext, action.hashCode()))
+                .build())
 }

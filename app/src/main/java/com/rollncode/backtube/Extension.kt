@@ -32,11 +32,15 @@ inline fun whenDebug(block: () -> Unit) {
 }
 
 inline val Activity.canDrawOverlays: Boolean
-    get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+    get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
-fun Intent.toPending(context: Context, requestCode: Int = 0): PendingIntent =
+fun Intent.toPendingActivity(context: Context, requestCode: Int = 0xA): PendingIntent =
         PendingIntent.getActivity(context, requestCode, this, PendingIntent.FLAG_UPDATE_CURRENT)
                 ?: PendingIntent.getActivity(context, requestCode, this, 0)
+
+fun Intent.toPendingBroadcast(context: Context, requestCode: Int = 0xB): PendingIntent =
+        PendingIntent.getBroadcast(context, requestCode, this, PendingIntent.FLAG_UPDATE_CURRENT)
+                ?: PendingIntent.getBroadcast(context, requestCode, this, 0)
 
 val Context.topPoint: Int
     @SuppressLint("PrivateResource")
@@ -66,3 +70,5 @@ inline fun attempt(block: () -> Unit) {
         toLog(e)
     }
 }
+
+fun Intent.startActivity(context: Context) = context.startActivity(this)

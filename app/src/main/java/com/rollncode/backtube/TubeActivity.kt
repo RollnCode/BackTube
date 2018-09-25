@@ -38,7 +38,7 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
         super.onCreate(b)
 
         val intent = super.getIntent() ?: Intent()
-        val action = when {
+        val event = when {
             TubeState.currentVideoId.isEmpty() &&
                     intent.action == Intent.ACTION_MAIN ->
                 if (b != null && intent.getBooleanExtra(EXTRA_INTERNAL, false))
@@ -50,7 +50,7 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
             else                                        -> TubeState.REQUEST_OVERDRAW
         }
         ReceiverBus.subscribe(this, *events)
-        ReceiverBus.notify(action)
+        ReceiverBus.notify(event)
     }
 
     override fun onResume() {

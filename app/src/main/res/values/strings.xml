@@ -1,6 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false" tools:ignore="PrivateResource">BackTube</string>
     
-    <string name="Close">Close</string>
-    <string name="Show_application">Show application</string>
+    <string name="close">Close</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="toggle">Toggle</string>
 </resources>

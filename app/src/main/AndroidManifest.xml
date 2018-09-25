@@ -4,7 +4,10 @@
     package="com.rollncode.backtube">
     
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="com.rollncode.backtube.RECEIVER"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <permission android:name="com.rollncode.backtube.RECEIVER"/>
     
     <application
         android:allowBackup="true"
@@ -51,5 +54,16 @@
         </activity>
         
         <service android:name=".TubeService"/>
+        
+        <receiver
+            android:name=".TubeReceiver"
+            android:permission="com.rollncode.backtube.RECEIVER">
+            <intent-filter>
+                <action android:name="com.rollncode.backtube.ACTION_0"/>
+                <action android:name="com.rollncode.backtube.ACTION_1"/>
+                <action android:name="com.rollncode.backtube.ACTION_2"/>
+                <action android:name="com.rollncode.backtube.ACTION_3"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

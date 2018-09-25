@@ -167,7 +167,6 @@ public final class PlayerService extends Service {
 
                     super.startForeground(NOTIFICATION_ID, new Builder(this)
                             .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
-                            .setContentText(getString(R.string.Show_application))
                             .setCategory(NotificationCompat.CATEGORY_SERVICE)
                             .setContentTitle(getString(R.string.app_name))
                             .setSmallIcon(R.drawable.svg_play)

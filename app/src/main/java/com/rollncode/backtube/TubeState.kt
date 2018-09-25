@@ -3,6 +3,7 @@ package com.rollncode.backtube
 object TubeState {
 
     var currentVideoId = ""
+    var windowShowed = false
 
     const val NOTHING = R.id.code_nothing
 
@@ -17,4 +18,9 @@ object TubeState {
     const val CLOSE_APP = R.id.code_close
     const val OPEN_YOUTUBE = R.id.code_youtube
     const val REQUEST_OVERDRAW = R.id.code_overdraw
+
+    const val ACTION_PLAY = "com.rollncode.backtube.ACTION_0"
+    const val ACTION_PAUSE = "com.rollncode.backtube.ACTION_1"
+    const val ACTION_CLOSE = "com.rollncode.backtube.ACTION_2"
+    const val ACTION_TOGGLE = "com.rollncode.backtube.ACTION_3"
 }
