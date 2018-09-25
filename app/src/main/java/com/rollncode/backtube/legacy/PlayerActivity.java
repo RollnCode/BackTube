@@ -1,4 +1,4 @@
-package com.rollncode.backtube;
+package com.rollncode.backtube.legacy;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -13,12 +13,15 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.rollncode.backtube.type.LinkType;
-import com.rollncode.backtube.type.ServiceAction;
+import com.rollncode.backtube.R;
+import com.rollncode.backtube.legacy.type.LinkType;
+import com.rollncode.backtube.legacy.type.ServiceAction;
 
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)
  * @since 27.04.17
+ *
+ * @deprecated since MainActivity created
  */
 public final class PlayerActivity extends AppCompatActivity {
 

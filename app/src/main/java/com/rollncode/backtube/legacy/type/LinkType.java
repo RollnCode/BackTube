@@ -1,4 +1,4 @@
-package com.rollncode.backtube.type;
+package com.rollncode.backtube.legacy.type;
 
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)

@@ -1,7 +1,5 @@
 apply plugin: "com.android.application"
-
 apply plugin: "kotlin-android"
-apply plugin: "kotlin-android-extensions"
 
 android {
     compileSdkVersion 28
@@ -9,7 +7,7 @@ android {
     defaultConfig {
         applicationId "com.rollncode.backtube"
 
-        minSdkVersion 14
+        minSdkVersion 17
         targetSdkVersion 28
 
         versionCode 1
@@ -49,16 +47,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    kotlin {
-        experimental { coroutines "enable" }
-    }
-    androidExtensions {
-        experimental = true
-    }
 }
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.26.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$vKotlin"
 
     implementation "com.android.support:appcompat-v7:$vSupport"
+
+    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:core:8.0.1"
 }

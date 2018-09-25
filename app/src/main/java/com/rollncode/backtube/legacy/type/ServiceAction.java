@@ -1,4 +1,4 @@
-package com.rollncode.backtube.type;
+package com.rollncode.backtube.legacy.type;
 
 import android.support.annotation.StringDef;
 

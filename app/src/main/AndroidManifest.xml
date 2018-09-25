@@ -15,7 +15,7 @@
         android:theme="@style/AppTheme">
         
         <activity
-            android:name="com.rollncode.backtube.PlayerActivity"
+            android:name=".TubeActivity"
             android:screenOrientation="portrait">
             
             <intent-filter>
@@ -28,6 +28,12 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 
+                <data
+                    android:host="www.youtube.com"
+                    android:scheme="https"/>
+                <data
+                    android:host="m.youtube.com"
+                    android:scheme="https"/>
                 <data
                     android:host="youtube.com"
                     android:scheme="https"/>
@@ -44,6 +50,6 @@
             </intent-filter>
         </activity>
         
-        <service android:name="com.rollncode.backtube.PlayerService"/>
+        <service android:name=".TubeService"/>
     </application>
 </manifest>

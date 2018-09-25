@@ -1,12 +1,9 @@
-package com.rollncode.backtube;
+package com.rollncode.backtube.legacy;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.net.Uri;
@@ -26,14 +23,17 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.webkit.WebView;
 
-import com.rollncode.backtube.type.LinkType;
-import com.rollncode.backtube.type.ServiceAction;
+import com.rollncode.backtube.R;
+import com.rollncode.backtube.legacy.type.LinkType;
+import com.rollncode.backtube.legacy.type.ServiceAction;
 
 import java.util.Locale;
 
 /**
  * @author Chekashov R.(email:roman_woland@mail.ru)
  * @since 27.04.17
+ *
+ * @deprecated since MainService created
  */
 public final class PlayerService extends Service {
 

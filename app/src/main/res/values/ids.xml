@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="code_youtube" type="id"/>
+    <item name="code_play" type="id"/>
+    <item name="code_pause" type="id"/>
+    <item name="code_stop" type="id"/>
+    <item name="code_hide" type="id"/>
+    <item name="code_show" type="id"/>
+    <item name="code_close" type="id"/>
+    <item name="code_overdraw" type="id"/>
+    <item name="code_nothing" type="id"/>
+    <item name="code_tube" type="id"/>
+</resources>
