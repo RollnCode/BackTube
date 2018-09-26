@@ -3,9 +3,7 @@ package com.rollncode.backtube
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
-import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
 
 object TubeHelper {
 
@@ -20,7 +18,8 @@ object TubeHelper {
             .build()
     }
 
-    fun requestVideo(id: String, onResult: (playlist: TubeVideo) -> Unit) = GlobalScope.launch {
+    @Suppress("RedundantSuspendModifier")
+    suspend fun requestVideo(id: String, onResult: (playlist: TubeVideo) -> Unit) {
         attempt(DEFAULT_ATTEMPTS) {
             youtube
                 .videos()
@@ -37,7 +36,7 @@ object TubeHelper {
         }
     }
 
-    fun requestPlaylist(id: String, onResult: (playlist: TubePlaylist) -> Unit) = GlobalScope.launch {
+    suspend fun requestPlaylist(id: String, onResult: (playlist: TubePlaylist) -> Unit) {
         attempt(DEFAULT_ATTEMPTS) {
             val playlistAsync = async {
                 retrievePlaylist(id)

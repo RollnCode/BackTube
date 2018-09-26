@@ -30,11 +30,13 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubeP
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerListener
 import com.rollncode.receiver.ObjectsReceiver
 import com.rollncode.receiver.ReceiverBus
+import kotlinx.coroutines.experimental.Job
 
 class TubeService : Service(),
         ObjectsReceiver,
         YouTubePlayerInitListener,
-        YouTubePlayerListener {
+        YouTubePlayerListener,
+        ICoroutines {
 
     companion object {
 
@@ -50,6 +52,8 @@ class TubeService : Service(),
                 context.startService(intent)
         }
     }
+
+    override val jobs = mutableSetOf<Job>()
 
     private val events by lazy {
         intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP, TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE)
@@ -92,6 +96,15 @@ class TubeService : Service(),
         }
     }
 
+    private val detailsNotification: NotificationCompat.Builder.() -> Unit = {
+        video?.run { setContentTitle(title) }
+        playlist?.run { setContentText("[$title] ${videos.indexOf(video)} of ${videos.size}") }
+    }
+
+    private var state = PlayerState.UNSTARTED
+    private var playlist: TubePlaylist? = null
+    private var video: TubeVideo? = null
+
     override fun onCreate() {
         super.onCreate()
 
@@ -111,15 +124,27 @@ class TubeService : Service(),
                     if (id.isNullOrEmpty())
                         id = uri.lastPathSegment
 
-                    if (id?.isNotBlank() == true && !id.contains("list")) {
-                        if (videoId == id) {
-                            return super.onStartCommand(intent, flags, startId)
+                    when {
+                        id?.contains("list") == true -> {
 
-                        } else {
-                            success = true
+                        }
+                        id?.isNotBlank() == true     -> {
+                            if (videoId == id) {
+                                return super.onStartCommand(intent, flags, startId)
 
-                            fromStart = true
-                            videoId = id
+                            } else {
+                                success = true
+
+                                fromStart = true
+                                videoId = id
+
+                                execute {
+                                    TubeHelper.requestVideo(videoId) {
+                                        video = it
+                                        redrawState()
+                                    }
+                                }
+                            }
                         }
                     }
                     toLog(id)
@@ -141,6 +166,8 @@ class TubeService : Service(),
     override fun onDestroy() {
         super.onDestroy()
         super.stopForeground(true)
+
+        cancelJobs()
 
         videoId = ""
         TubeState.windowShowed = false
@@ -222,15 +249,22 @@ class TubeService : Service(),
     }
 
     override fun onStateChange(state: PlayerState) {
+        this.state = state
+        redrawState()
+    }
+
+    private fun redrawState() {
         when (state) {
             PlayerState.PLAYING -> startForeground {
                 setSmallIcon(R.drawable.notification_play)
+                detailsNotification.invoke(this)
 
                 addAction(R.drawable.svg_pause, R.string.pause, TubeState.ACTION_PAUSE)
                 addAction(R.drawable.svg_toggle, R.string.toggle, TubeState.ACTION_TOGGLE)
             }
             PlayerState.PAUSED  -> startForeground {
                 setSmallIcon(R.drawable.notification_pause)
+                detailsNotification.invoke(this)
 
                 addAction(R.drawable.svg_play, R.string.play, TubeState.ACTION_PLAY)
                 addAction(R.drawable.svg_close, R.string.close, TubeState.ACTION_CLOSE)
