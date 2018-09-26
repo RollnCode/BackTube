@@ -19,9 +19,9 @@ android {
         release {
             storeFile file("release.keystore")
 
-            keyAlias "rollncode"
-            keyPassword "rollncode"
-            storePassword "rollncode"
+            keyAlias "$keystore_201705_alias"
+            keyPassword "$keystore_201705_key"
+            storePassword "$keystore_201705_store"
         }
     }
     buildTypes {
