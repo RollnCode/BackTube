@@ -62,9 +62,10 @@ val Context.topPoint: Int
         return statusBarHeight + actionBarHeight
     }
 
-inline fun attempt(block: () -> Unit) {
+inline fun attempt(count: Int = 0, block: () -> Unit): Unit = (0..count).forEach { _ ->
     try {
         block.invoke()
+        return
 
     } catch (e: Exception) {
         toLog(e)

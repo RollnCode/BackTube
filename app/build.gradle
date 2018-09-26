@@ -14,6 +14,8 @@ android {
         versionName "2"
 
         resConfig "en"
+
+        buildConfigField "String", "YOUTUBE_APIKEY", "\"$backtube_apikey\""
     }
     signingConfigs {
         release {
@@ -47,11 +49,26 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlin {
+        experimental { coroutines "enable" }
+    }
+    packagingOptions {
+        exclude "META-INF/DEPENDENCIES"
+        exclude "META-INF/LICENSE"
+        exclude "META-INF/LICENSE.txt"
+        exclude "META-INF/license.txt"
+        exclude "META-INF/NOTICE"
+        exclude "META-INF/NOTICE.txt"
+        exclude "META-INF/notice.txt"
+        exclude "META-INF/ASL2.0"
+    }
 }
 dependencies {
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.26.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$vKotlin"
 
     implementation "com.android.support:appcompat-v7:$vSupport"
 
     implementation "com.pierfrancescosoffritti.androidyoutubeplayer:core:8.0.1"
+    implementation "com.google.apis:google-api-services-youtube:v3-rev205-1.25.0"
 }
