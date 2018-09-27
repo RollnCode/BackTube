@@ -8,15 +8,13 @@ object TubeState {
     var currentUri: Uri = Uri.EMPTY
     var windowShowed = false
 
-    const val NOTHING = id.code_nothing
-
     const val PLAY = id.code_play
     const val PAUSE = id.code_pause
     const val STOP = id.code_stop
-
     const val WINDOW_SHOW = id.code_show
     const val WINDOW_HIDE = id.code_hide
 
+    const val NOTHING = id.code_nothing
     const val OPEN_TUBE = id.code_tube
     const val CLOSE_APP = id.code_close
     const val OPEN_YOUTUBE = id.code_youtube

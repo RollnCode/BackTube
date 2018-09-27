@@ -16,7 +16,6 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         YouTubePlayerListener {
 
     private var player: YouTubePlayer? = null
-    private var playerState = PlayerState.UNSTARTED
 
     private var playerReady = false
     private var shouldPlay = false
@@ -25,8 +24,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
     private var video: TubeVideo? = null
     private var playlist: TubePlaylist? = null
 
-    var query = EMPTY_QUERY_CONTROLLER
-        private set
+    private var query = IQueryController.EMPTY
 
     fun play(video: TubeVideo) {
         if (this.video == video) return
@@ -49,7 +47,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
     }
 
     fun play() {
-        if (query.currentIndex < 0 || player == null || !playerReady) {
+        if (query == IQueryController.EMPTY || player == null || !playerReady) {
             shouldPlay = true
 
         } else if (loadVideo) {
@@ -58,7 +56,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
             val video = query.current()
             player?.loadVideo(video.id, 0F)
 
-            listener.onLoadVideo(video, playlist)
+            listener.onNewVideo(video, playlist)
 
         } else {
             player?.play()
@@ -76,7 +74,6 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         playlist = null
         TubeState.currentUri = Uri.EMPTY
 
-        playerState = PlayerState.UNSTARTED
         playerReady = false
         shouldPlay = false
         loadVideo = false
@@ -107,9 +104,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
     }
 
     override fun onStateChange(state: PlayerState) {
-        playerState = state
-
-        when (playerState) {
+        when (state) {
             PlayerState.PLAYING -> listener.onPlay(query.current(), playlist)
             PlayerState.PAUSED  -> listener.onPause(query.current(), playlist)
             PlayerState.ENDED   -> {
@@ -120,22 +115,22 @@ class PlayerController(val listener: OnPlayerControllerListener) :
                     play()
                 }
             }
-            else                -> toLog("PlayerController.onStateChange: $playerState")
+            else                -> toLog("PlayerController.onStateChange: $state")
         }
     }
 
     override fun onPlaybackQualityChange(playbackQuality: PlaybackQuality) = Unit
+    override fun onPlaybackRateChange(playbackRate: PlaybackRate) = Unit
+    override fun onVideoLoadedFraction(loadedFraction: Float) = Unit
     override fun onVideoDuration(duration: Float) = Unit
     override fun onCurrentSecond(second: Float) = Unit
-    override fun onVideoLoadedFraction(loadedFraction: Float) = Unit
-    override fun onPlaybackRateChange(playbackRate: PlaybackRate) = Unit
+    override fun onError(error: PlayerError) = Unit
     override fun onVideoId(videoId: String) = Unit
     override fun onApiChange() = Unit
-    override fun onError(error: PlayerError) = Unit
 }
 
 interface OnPlayerControllerListener {
-    fun onLoadVideo(video: TubeVideo, playlist: TubePlaylist?)
+    fun onNewVideo(video: TubeVideo, playlist: TubePlaylist?)
     fun onPlay(video: TubeVideo, playlist: TubePlaylist?)
     fun onPause(video: TubeVideo, playlist: TubePlaylist?)
 }

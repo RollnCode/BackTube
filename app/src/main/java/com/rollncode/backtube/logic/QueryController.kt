@@ -5,6 +5,16 @@ import com.rollncode.backtube.api.TubeVideo
 
 interface IQueryController {
 
+    companion object {
+        val EMPTY = object : IQueryController {
+            override val query: List<TubeVideo> = emptyList()
+            override var currentIndex: Int = -1
+            override fun current() = throw NoSuchMethodException()
+            override fun toNext() = throw NoSuchMethodException()
+            override fun toPrevious() = throw NoSuchMethodException()
+        }
+    }
+
     val query: List<TubeVideo>
     var currentIndex: Int
 
@@ -26,14 +36,6 @@ interface IQueryController {
 
         return success
     }
-}
-
-val EMPTY_QUERY_CONTROLLER = object : IQueryController {
-    override val query: List<TubeVideo> = emptyList()
-    override var currentIndex: Int = -1
-    override fun current() = throw NoSuchMethodException()
-    override fun toNext() = throw NoSuchMethodException()
-    override fun toPrevious() = throw NoSuchMethodException()
 }
 
 fun TubePlaylist.createQueryController() = object : IQueryController {

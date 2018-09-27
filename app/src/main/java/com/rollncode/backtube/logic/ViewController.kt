@@ -40,7 +40,7 @@ class ViewController(context: Application, playerController: PlayerController) {
 
         createWindowLayoutParams(min).apply {
             gravity = GravityCompat.START or Gravity.TOP
-            y = context.topPoint
+            y = context.actionBarHeight + context.statusBarHeight
         }
     }
 

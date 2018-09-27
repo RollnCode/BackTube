@@ -91,8 +91,8 @@ class TubeService : Service(),
         super.stopForeground(true)
         cancelJobs()
 
-        ReceiverBus.unsubscribe(this, *events)
         ReceiverBus.notify(TubeState.CLOSE_APP)
+        ReceiverBus.unsubscribe(this, *events)
 
         playerController.release()
         viewController.release()

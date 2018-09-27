@@ -13,6 +13,10 @@ import com.rollncode.backtube.BuildConfig
 import com.rollncode.backtube.R.attr
 import com.rollncode.backtube.R.dimen
 
+inline fun whenDebug(block: () -> Unit) {
+    if (BuildConfig.DEBUG) block()
+}
+
 fun toLog(a: Any?, tag: String = "aLog"): Unit = whenDebug {
     when (a) {
         is String    -> {
@@ -29,11 +33,6 @@ fun toLog(a: Any?, tag: String = "aLog"): Unit = whenDebug {
     }
 }
 
-inline fun whenDebug(block: () -> Unit) {
-    if (BuildConfig.DEBUG)
-        block()
-}
-
 inline val Activity.canDrawOverlays: Boolean
     get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
@@ -45,24 +44,19 @@ fun Intent.toPendingBroadcast(context: Context, requestCode: Int = 0xB): Pending
         PendingIntent.getBroadcast(context, requestCode, this, PendingIntent.FLAG_UPDATE_CURRENT)
                 ?: PendingIntent.getBroadcast(context, requestCode, this, 0)
 
-val Context.topPoint: Int
+val Context.actionBarHeight: Int
     @SuppressLint("PrivateResource")
     get() {
-        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-        val statusBarHeight =
-                if (resourceId > 0)
-                    resources.getDimensionPixelSize(resourceId)
-                else
-                    0
-
         val value = TypedValue()
-        val actionBarHeight =
-                if (theme.resolveAttribute(attr.actionBarSize, value, true))
-                    TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
-                else
-                    resources.getDimensionPixelSize(dimen.abc_action_bar_default_height_material)
-
-        return statusBarHeight + actionBarHeight
+        return if (theme.resolveAttribute(attr.actionBarSize, value, true))
+            TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
+        else
+            resources.getDimensionPixelSize(dimen.abc_action_bar_default_height_material)
+    }
+val Context.statusBarHeight: Int
+    get() {
+        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
     }
 
 inline fun attempt(count: Int = 0, block: () -> Unit): Unit =

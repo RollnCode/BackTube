@@ -68,8 +68,7 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
     private fun getString(@StringRes stringRes: Int) = service.getString(stringRes)
     private fun getColor(@ColorRes colorRes: Int) = ContextCompat.getColor(service, colorRes)
 
-    override fun onLoadVideo(video: TubeVideo, playlist: TubePlaylist?) {
-    }
+    override fun onNewVideo(video: TubeVideo, playlist: TubePlaylist?) = Unit
 
     override fun onPlay(video: TubeVideo, playlist: TubePlaylist?) {
         startForeground {

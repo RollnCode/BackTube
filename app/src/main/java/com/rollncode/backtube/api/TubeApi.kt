@@ -5,62 +5,47 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
 import com.rollncode.backtube.BuildConfig
 import com.rollncode.backtube.logic.attempt
-import kotlinx.coroutines.experimental.Dispatchers.Default
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.async
+import com.rollncode.utility.ICoroutines
 
+@Suppress("RedundantSuspendModifier")
 object TubeApi {
 
     private const val DEFAULT_KEY = BuildConfig.YOUTUBE_APIKEY
     private const val DEFAULT_PART = "snippet,contentDetails"
-    private const val DEFAULT_ATTEMPTS = 5
+    private const val DEFAULT_ATTEMPTS = 3
     private const val DEFAULT_MAX = 50L
 
-    private val playlists = mutableMapOf<String, TubePlaylist?>()
-    private val videos = mutableMapOf<String, TubeVideo?>()
+    private val playlistCache = mutableMapOf<String, TubePlaylist?>()
+    private val videoCache = mutableMapOf<String, TubeVideo?>()
 
     private val youtube by lazy {
         YouTube.Builder(NetHttpTransport(), JacksonFactory(), null)
-            .setApplicationName("com.rollncode.backtube")
+            .setApplicationName(BuildConfig.APPLICATION_ID)
             .build()
     }
 
-    @Suppress("RedundantSuspendModifier")
     suspend fun requestVideo(id: String,
                              onResult: (playlist: TubeVideo) -> Unit,
-                             onError: () -> Unit
-                            ) = attempt(DEFAULT_ATTEMPTS,
-            {
-                var video = videos[id]
-                if (video == null) youtube
-                    .videos()
-                    .list(DEFAULT_PART)
-                    .apply {
-                        this.id = id
-                        key = DEFAULT_KEY
-                    }
-                    .execute()
-                    .run {
-                        video = TubeVideo(items.first())
-                        videos[id] = video
-                    }
-                video?.run { onResult(this) }
-            },
-            {
-                onError()
-            })
+                             onError: (Exception) -> Unit) =
+            attempt(DEFAULT_ATTEMPTS, {
+                var video = videoCache[id]
+                if (video == null) {
+                    video = retrieveVideo(id)
+                    videoCache[id] = video
+                }
+                onResult(video)
+            }, onError)
 
     suspend fun requestPlaylist(id: String,
                                 onResult: (playlist: TubePlaylist) -> Unit,
-                                onError: () -> Unit
-                               ) = attempt(DEFAULT_ATTEMPTS,
-            {
-                var playlist = playlists[id]
+                                onError: (Exception) -> Unit) =
+            attempt(DEFAULT_ATTEMPTS, {
+                var playlist = playlistCache[id]
                 if (playlist == null) {
-                    val playlistAsync = GlobalScope.async(Default) {
+                    val playlistAsync = ICoroutines.async {
                         retrievePlaylist(id)
                     }
-                    val videosAsync = GlobalScope.async(Default) {
+                    val videosAsync = ICoroutines.async {
                         var nextPage: String? = null
                         val videos = mutableListOf<TubeVideo>()
                         do {
@@ -76,16 +61,24 @@ object TubeApi {
                     playlist = playlistAsync.await()
                     playlist.videos = videosAsync.await()
 
-                    playlists[id] = playlist
+                    playlistCache[id] = playlist
                 }
-                playlist.run { onResult(this) }
-            },
-            {
-                onError()
-            })
+                onResult(playlist)
+            }, onError)
 
-    @Suppress("RedundantSuspendModifier")
-    private suspend fun retrievePlaylist(id: String): TubePlaylist = youtube
+    private suspend fun retrieveVideo(id: String)
+            : TubeVideo = youtube
+        .videos()
+        .list(DEFAULT_PART)
+        .apply {
+            this.id = id
+            key = DEFAULT_KEY
+        }
+        .execute()
+        .run { TubeVideo(items.first()) }
+
+    private suspend fun retrievePlaylist(id: String)
+            : TubePlaylist = youtube
         .playlists()
         .list(DEFAULT_PART)
         .apply {
@@ -96,8 +89,7 @@ object TubeApi {
         .execute()
         .run { TubePlaylist(items.first()) }
 
-    @Suppress("RedundantSuspendModifier")
-    private suspend fun retrievePlaylistVideos(id: String, nextPage: String? = null)
+    private suspend fun retrievePlaylistVideos(id: String, nextPage: String?)
             : Pair<String?, List<TubeVideo>> = youtube
         .playlistItems()
         .list(DEFAULT_PART)
@@ -109,7 +101,5 @@ object TubeApi {
                 pageToken = nextPage
         }
         .execute()
-        .run {
-            nextPageToken to items.map { TubeVideo(it) }
-        }
+        .run { nextPageToken to items.map { TubeVideo(it) } }
 }

@@ -12,7 +12,6 @@ import com.rollncode.utility.receiver.ReceiverBus
 class TubeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-
         val event = when (intent.action) {
             TubeState.ACTION_PLAY   -> TubeState.PLAY
             TubeState.ACTION_PAUSE  -> TubeState.PAUSE
