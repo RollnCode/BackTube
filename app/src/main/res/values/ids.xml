@@ -10,4 +10,6 @@
     <item name="code_overdraw" type="id"/>
     <item name="code_nothing" type="id"/>
     <item name="code_tube" type="id"/>
+    <item name="code_previous" type="id"/>
+    <item name="code_next" type="id"/>
 </resources>

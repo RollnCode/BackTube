@@ -23,7 +23,6 @@
         android:layout_below="@+id/tv_video"
         android:layout_alignStart="@+id/tv_video"
         android:layout_alignEnd="@+id/tv_video"
-        android:maxLines="2"
         android:paddingTop="@dimen/spacing"
         android:paddingBottom="@dimen/spacing"
         android:textSize="12sp"
@@ -48,9 +47,7 @@
         style="@style/Notification.Button"
         android:layout_alignBottom="@+id/btn_previous"
         android:layout_toEndOf="@+id/btn_pause"
-        android:src="@drawable/svg_play"
-        android:visibility="gone"
-        tools:visibility="visible"/>
+        android:src="@drawable/svg_play"/>
     
     <ImageView
         android:id="@+id/btn_next"
@@ -60,11 +57,25 @@
         android:src="@drawable/svg_next"/>
     
     <ImageView
+        android:id="@+id/btn_close"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/btn_previous"
+        android:layout_toEndOf="@+id/btn_next"
+        android:src="@drawable/svg_close"/>
+    
+    <ImageView
+        android:id="@+id/btn_toggle"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/btn_previous"
+        android:layout_toEndOf="@+id/btn_close"
+        android:src="@drawable/svg_toggle"/>
+    
+    <ImageView
         android:id="@+id/iv_cover"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/svg_placeholder"/>
+        android:src="@mipmap/ic_launcher"/>
 </RelativeLayout>

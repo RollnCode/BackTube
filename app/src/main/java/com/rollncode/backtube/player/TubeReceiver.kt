@@ -23,6 +23,9 @@ class TubeReceiver : BroadcastReceiver() {
                 else
                     return TubeActivity.newInstance(context).startActivity(context)
             }
+            TubeState.ACTION_PREVIOUS ->TubeState.PREVIOUS
+            TubeState.ACTION_NEXT ->TubeState.NEXT
+
             else                    -> return whenDebug { throw IllegalStateException("Unknown intent action: ${intent.action}") }
         }
         ReceiverBus.notify(event)

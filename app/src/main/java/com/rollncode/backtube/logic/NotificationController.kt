@@ -15,6 +15,8 @@ import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
+import android.view.View
+import android.widget.RemoteViews
 import com.rollncode.backtube.R
 import com.rollncode.backtube.api.TubeApi
 import com.rollncode.backtube.api.TubePlaylist
@@ -38,10 +40,10 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
         channelId
     }
 
-    private val defaultLargeIcon by lazy { BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher) }
     override val jobs = mutableSetOf<Job>()
-    private var state = NotificationState()
-    private val notificationId = 0xA
+
+    private val defaultLargeIcon by lazy { BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher) }
+    private var state = NotificationState(getString(R.string.app_name), getString(R.string.loading))
 
     fun release() {
         cancelJobs()
@@ -60,8 +62,42 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
                 .setContentIntent(TubeActivity.newInstance(service).toPendingActivity(service))
 
                 .run {
+                    val modifications: RemoteViews.() -> Unit = {
+                        val singleVisibility = if (state.single) View.GONE else View.VISIBLE
+                        setViewVisibility(R.id.btn_previous, singleVisibility)
+                        setViewVisibility(R.id.btn_next, singleVisibility)
+
+                        val whenPlayVisibility = if (state.play) View.VISIBLE else View.GONE
+                        setViewVisibility(R.id.btn_toggle, whenPlayVisibility)
+                        setViewVisibility(R.id.btn_pause, whenPlayVisibility)
+
+                        val whenPauseVisibility = if (state.play) View.GONE else View.VISIBLE
+                        setViewVisibility(R.id.btn_close, whenPauseVisibility)
+                        setViewVisibility(R.id.btn_play, whenPauseVisibility)
+
+                        setTextViewText(R.id.tv_video, state.videoTitle)
+                        setTextViewText(R.id.tv_playlist, state.playlistTitle)
+
+                        if (state.largeIcon != null)
+                            setImageViewBitmap(R.id.iv_cover, state.largeIcon)
+
+                        setOnClickPendingIntent(R.id.btn_previous, getPendingBroadcast(TubeState.ACTION_PREVIOUS))
+                        setOnClickPendingIntent(R.id.btn_play, getPendingBroadcast(TubeState.ACTION_PLAY))
+                        setOnClickPendingIntent(R.id.btn_pause, getPendingBroadcast(TubeState.ACTION_PAUSE))
+                        setOnClickPendingIntent(R.id.btn_next, getPendingBroadcast(TubeState.ACTION_NEXT))
+                        setOnClickPendingIntent(R.id.btn_close, getPendingBroadcast(TubeState.ACTION_CLOSE))
+                        setOnClickPendingIntent(R.id.btn_toggle, getPendingBroadcast(TubeState.ACTION_TOGGLE))
+                    }
+                    RemoteViews(service.packageName, R.layout.notification_player_small)
+                        .apply(modifications)
+                        .run { setCustomContentView(this) }
+
+                    RemoteViews(service.packageName, R.layout.notification_player_big)
+                        .apply(modifications)
+                        .run { setCustomBigContentView(this) }
+
                     onBuilder.invoke(this)
-                    service.startForeground(notificationId, build())
+                    service.startForeground(0xA, build())
                 }
 
     private fun getString(@StringRes stringRes: Int) = service.getString(stringRes)
@@ -73,7 +109,8 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
                 if (playlist == null)
                     ""
                 else
-                    "${playlist.title} - ${playlist.videos.indexOf(video) + 1} of ${playlist.videos.size}")
+                    "${playlist.title} - ${playlist.videos.indexOf(video) + 1} of ${playlist.videos.size}",
+                playlist == null)
         execute {
             attempt(2) {
                 state.largeIcon = TubeApi.requestBitmap(video.thumbnail)
@@ -101,33 +138,15 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
         setLargeIcon(state.largeIcon)
         setContentTitle(state.videoTitle)
         setContentText(state.playlistTitle)
-
-        setDeleteIntent(TubeActivity.newInstance(service).toPendingActivity(service))
-
-        if (state.play) {
-            addAction(R.drawable.svg_pause, R.string.pause, TubeState.ACTION_PAUSE)
-            addAction(R.drawable.svg_toggle, R.string.toggle, TubeState.ACTION_TOGGLE)
-
-        } else {
-            addAction(R.drawable.svg_play, R.string.play, TubeState.ACTION_PLAY)
-            addAction(R.drawable.svg_close, R.string.close, TubeState.ACTION_CLOSE)
-        }
     }
 
-    private fun NotificationCompat.Builder.addAction(@DrawableRes drawableRes: Int,
-                                                     @StringRes stringRes: Int,
-                                                     action: String
-                                                    ) = addAction(
-            NotificationCompat.Action.Builder(
-                    drawableRes,
-                    getString(stringRes),
-                    Intent(action).toPendingBroadcast(service, action.hashCode()))
-                .build())
+    private fun getPendingBroadcast(action: String) = Intent(action).toPendingBroadcast(service, action.hashCode())
 }
 
 private data class NotificationState(
         val videoTitle: String = "",
         val playlistTitle: String = "",
+        val single: Boolean = true,
         @DrawableRes var smallIcon: Int = R.drawable.notification_play,
         var largeIcon: Bitmap? = null,
         var play: Boolean = false

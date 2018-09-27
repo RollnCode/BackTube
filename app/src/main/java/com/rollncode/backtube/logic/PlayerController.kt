@@ -67,6 +67,20 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         player?.pause()
     }
 
+    fun previous() {
+        if (query.toPrevious()) {
+            loadVideo = true
+            play()
+        }
+    }
+
+    fun next() {
+        if (query.toNext()) {
+            loadVideo = true
+            play()
+        }
+    }
+
     fun release() {
         toLog("PlayerController.release")
 
@@ -109,11 +123,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
             PlayerState.PAUSED  -> listener.onPause(query.current(), playlist)
             PlayerState.ENDED   -> {
                 listener.onPause(query.current(), playlist)
-
-                if (query.toNext()) {
-                    loadVideo = true
-                    play()
-                }
+                next()
             }
             else                -> toLog("PlayerController.onStateChange: $state")
         }

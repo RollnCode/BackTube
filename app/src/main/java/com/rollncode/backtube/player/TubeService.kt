@@ -43,7 +43,8 @@ class TubeService : Service(),
     }
 
     override val jobs = mutableSetOf<Job>()
-    private val events = intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP, TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE)
+    private val events = intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP,
+            TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE, TubeState.PREVIOUS, TubeState.NEXT)
 
     private val notificationController by lazy { NotificationController(this) }
     private val playerController by lazy { PlayerController(notificationController) }
@@ -104,6 +105,8 @@ class TubeService : Service(),
             TubeState.PLAY        -> playerController.play()
             TubeState.PAUSE       -> playerController.pause()
             TubeState.STOP        -> super.stopSelf()
+            TubeState.PREVIOUS    -> playerController.previous()
+            TubeState.NEXT        -> playerController.next()
             TubeState.WINDOW_SHOW -> viewController.show()
             TubeState.WINDOW_HIDE -> viewController.hide()
 

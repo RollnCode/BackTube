@@ -29,6 +29,7 @@
     <ImageView
         android:id="@+id/btn_previous"
         style="@style/Notification.Button"
+        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_pause"
         android:src="@drawable/svg_previous"/>
@@ -36,6 +37,7 @@
     <ImageView
         android:id="@+id/btn_pause"
         style="@style/Notification.Button"
+        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_play"
         android:src="@drawable/svg_pause"/>
@@ -43,25 +45,42 @@
     <ImageView
         android:id="@+id/btn_play"
         style="@style/Notification.Button"
+        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_next"
         android:src="@drawable/svg_play"
-        android:visibility="gone"
-        tools:visibility="visible"/>
+        android:visibility="gone"/>
     
     <ImageView
         android:id="@+id/btn_next"
         style="@style/Notification.Button"
+        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/iv_cover"
+        android:layout_toStartOf="@+id/btn_close"
         android:src="@drawable/svg_next"/>
     
     <ImageView
+        android:id="@+id/btn_close"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_toggle"
+        android:src="@drawable/svg_close"/>
+    
+    <ImageView
+        android:id="@+id/btn_toggle"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/iv_cover"
+        android:src="@drawable/svg_toggle"/>
+    
+    <ImageView
         android:id="@+id/iv_cover"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/buttons_size"
+        android:layout_height="@dimen/buttons_size"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/svg_placeholder"/>
+        android:src="@mipmap/ic_launcher"/>
 </RelativeLayout>

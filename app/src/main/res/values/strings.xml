@@ -2,8 +2,6 @@
     <string name="app_name" translatable="false" tools:ignore="PrivateResource">BackTube</string>
     
     <string name="close">Close</string>
-    <string name="pause">Pause</string>
-    <string name="play">Play</string>
-    <string name="toggle">Toggle</string>
+    <string name="loading">Loading</string>
     <string name="no_youtube">YouTube application is not found</string>
 </resources>
