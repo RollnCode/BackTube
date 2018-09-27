@@ -77,7 +77,11 @@ class TubeService : Service(),
         if (intent != null && intent.action == ACTION_START) {
             ReceiverBus.notify(TubeState.WINDOW_SHOW)
 
-            val uri = intent.data ?: throw java.lang.IllegalStateException()
+            var uri = intent.data ?: throw java.lang.IllegalStateException()
+            if (!uri.isHierarchical) {
+                val uriString = uri.toString()
+                uri = Uri.parse(uriString.substring(uriString.indexOf(": ") + 2))
+            }
             var id = uri.getQueryParameter("v")
             if (id.isNullOrEmpty())
                 id = uri.lastPathSegment
