@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.support.v4.view.GravityCompat
 import android.view.Gravity
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
@@ -38,7 +39,7 @@ class ViewController(context: Application, playerController: PlayerController) {
         val min = Math.min(metrics.heightPixels, metrics.widthPixels)
 
         createWindowLayoutParams(min).apply {
-            gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
+            gravity = GravityCompat.START or Gravity.TOP
             y = context.topPoint
         }
     }

@@ -10,7 +10,10 @@ import android.os.IBinder
 import com.rollncode.backtube.api.TubeApi
 import com.rollncode.backtube.logic.NotificationController
 import com.rollncode.backtube.logic.PlayerController
+import com.rollncode.backtube.logic.TUBE_PLAYLIST
+import com.rollncode.backtube.logic.TUBE_VIDEO
 import com.rollncode.backtube.logic.TubeState
+import com.rollncode.backtube.logic.TubeUri
 import com.rollncode.backtube.logic.ViewController
 import com.rollncode.backtube.logic.toLog
 import com.rollncode.backtube.logic.whenDebug
@@ -58,35 +61,23 @@ class TubeService : Service(),
         if (intent != null && intent.action == ACTION_START) {
             ReceiverBus.notify(TubeState.WINDOW_SHOW)
 
-            var uri = intent.data ?: throw java.lang.IllegalStateException()
-            if (!uri.isHierarchical) {
-                val uriString = uri.toString()
-                uri = Uri.parse(uriString.substring(uriString.indexOf(": ") + 2))
-            }
-            TubeState.currentUri = uri
+            val uri = TubeUri(intent)
+            TubeState.currentUri = uri.original
 
-            var id = uri.getQueryParameter("v")
-            if (id.isNullOrEmpty())
-                id = uri.lastPathSegment
-
-            when {
-                id?.contains("list") == true -> execute {
-                    val listId = uri.getQueryParameter("list")
-                    if (listId == null)
-                        ReceiverBus.notify(TubeState.STOP)
-                    else
-                        TubeApi.requestPlaylist(listId,
-                                { playerController.play(it) },
-                                { ReceiverBus.notify(TubeState.STOP) })
-                }
-                id?.isNotBlank() == true     -> execute {
-                    TubeApi.requestVideo(id,
+            when (uri.type) {
+                TUBE_VIDEO    -> execute {
+                    TubeApi.requestVideo(uri.id,
                             { playerController.play(it) },
                             { ReceiverBus.notify(TubeState.STOP) })
                 }
-                else                         -> ReceiverBus.notify(TubeState.STOP)
+                TUBE_PLAYLIST -> execute {
+                    TubeApi.requestPlaylist(uri.id,
+                            { playerController.play(it) },
+                            { ReceiverBus.notify(TubeState.STOP) })
+                }
+                else          -> ReceiverBus.notify(TubeState.STOP)
             }
-            toLog("TubeService.ACTION_START: $id")
+            toLog("TubeService.ACTION_START: $uri")
         }
         return super.onStartCommand(intent, flags, startId)
     }

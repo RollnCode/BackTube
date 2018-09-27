@@ -3,9 +3,6 @@ package com.rollncode.backtube.api
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
-import com.google.api.services.youtube.model.Playlist
-import com.google.api.services.youtube.model.PlaylistItem
-import com.google.api.services.youtube.model.Video
 import com.rollncode.backtube.BuildConfig
 import com.rollncode.backtube.logic.attempt
 import kotlinx.coroutines.experimental.Dispatchers.Default
@@ -19,6 +16,9 @@ object TubeApi {
     private const val DEFAULT_ATTEMPTS = 5
     private const val DEFAULT_MAX = 50L
 
+    private val playlists = mutableMapOf<String, TubePlaylist?>()
+    private val videos = mutableMapOf<String, TubeVideo?>()
+
     private val youtube by lazy {
         YouTube.Builder(NetHttpTransport(), JacksonFactory(), null)
             .setApplicationName("com.rollncode.backtube")
@@ -31,7 +31,8 @@ object TubeApi {
                              onError: () -> Unit
                             ) = attempt(DEFAULT_ATTEMPTS,
             {
-                youtube
+                var video = videos[id]
+                if (video == null) youtube
                     .videos()
                     .list(DEFAULT_PART)
                     .apply {
@@ -39,7 +40,11 @@ object TubeApi {
                         key = DEFAULT_KEY
                     }
                     .execute()
-                    .run { onResult(TubeVideo(items.first())) }
+                    .run {
+                        video = TubeVideo(items.first())
+                        videos[id] = video
+                    }
+                video?.run { onResult(this) }
             },
             {
                 onError()
@@ -50,26 +55,30 @@ object TubeApi {
                                 onError: () -> Unit
                                ) = attempt(DEFAULT_ATTEMPTS,
             {
-                val playlistAsync = GlobalScope.async(Default) {
-                    retrievePlaylist(id)
+                var playlist = playlists[id]
+                if (playlist == null) {
+                    val playlistAsync = GlobalScope.async(Default) {
+                        retrievePlaylist(id)
+                    }
+                    val videosAsync = GlobalScope.async(Default) {
+                        var nextPage: String? = null
+                        val videos = mutableListOf<TubeVideo>()
+                        do {
+                            val pair = retrievePlaylistVideos(id, nextPage)
+
+                            nextPage = pair.first
+                            videos.addAll(pair.second)
+
+                        } while (nextPage != null)
+
+                        videos
+                    }
+                    playlist = playlistAsync.await()
+                    playlist.videos = videosAsync.await()
+
+                    playlists[id] = playlist
                 }
-                val videosAsync = GlobalScope.async(Default) {
-                    var nextPage: String? = null
-                    val videos = mutableListOf<TubeVideo>()
-                    do {
-                        val pair = retrievePlaylistVideos(id, nextPage)
-
-                        nextPage = pair.first
-                        videos.addAll(pair.second)
-
-                    } while (nextPage != null)
-
-                    videos
-                }
-                val playlist = playlistAsync.await()
-                playlist.videos = videosAsync.await()
-
-                onResult.invoke(playlist)
+                playlist.run { onResult(this) }
             },
             {
                 onError()
@@ -103,32 +112,4 @@ object TubeApi {
         .run {
             nextPageToken to items.map { TubeVideo(it) }
         }
-}
-
-data class TubePlaylist(
-        val id: String,
-        val title: String,
-        val channelTitle: String,
-        var videos: List<TubeVideo> = emptyList()) {
-
-    constructor(playlist: Playlist) : this(
-            playlist.snippet.channelId,
-            playlist.snippet.title,
-            playlist.snippet.channelTitle)
-}
-
-data class TubeVideo(
-        val id: String,
-        val title: String,
-        val thumbnail: String) {
-
-    constructor(video: Video) : this(
-            video.id,
-            video.snippet.title,
-            video.snippet.thumbnails.medium.url)
-
-    constructor(video: PlaylistItem) : this(
-            video.contentDetails.videoId,
-            video.snippet.title,
-            video.snippet.thumbnails.medium.url)
 }
