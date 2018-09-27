@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:background="@android:color/white"
+    tools:ignore="ContentDescription">
+    
+    <TextView
+        android:id="@+id/tv_video"
+        style="@style/Notification.Title"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/iv_cover"
+        android:maxLines="2"
+        android:paddingTop="@dimen/spacing"
+        android:textSize="14sp"
+        tools:text="Video Title Example\nand something else"/>
+    
+    <TextView
+        android:id="@+id/tv_playlist"
+        style="@style/Notification.Title"
+        android:layout_below="@+id/tv_video"
+        android:layout_alignStart="@+id/tv_video"
+        android:layout_alignEnd="@+id/tv_video"
+        android:maxLines="2"
+        android:paddingTop="@dimen/spacing"
+        android:paddingBottom="@dimen/spacing"
+        android:textSize="12sp"
+        tools:text="[Playlist] 2 of 24\nand something else"/>
+    
+    <ImageView
+        android:id="@+id/btn_previous"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/iv_cover"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/svg_previous"/>
+    
+    <ImageView
+        android:id="@+id/btn_pause"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/btn_previous"
+        android:layout_toEndOf="@+id/btn_previous"
+        android:src="@drawable/svg_pause"/>
+    
+    <ImageView
+        android:id="@+id/btn_play"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/btn_previous"
+        android:layout_toEndOf="@+id/btn_pause"
+        android:src="@drawable/svg_play"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+    
+    <ImageView
+        android:id="@+id/btn_next"
+        style="@style/Notification.Button"
+        android:layout_alignBottom="@+id/btn_previous"
+        android:layout_toEndOf="@+id/btn_play"
+        android:src="@drawable/svg_next"/>
+    
+    <ImageView
+        android:id="@+id/iv_cover"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/svg_placeholder"/>
+</RelativeLayout>

@@ -1,11 +1,14 @@
 package com.rollncode.backtube.api
 
+import android.graphics.BitmapFactory
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
 import com.rollncode.backtube.BuildConfig
 import com.rollncode.backtube.logic.attempt
 import com.rollncode.utility.ICoroutines
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Suppress("RedundantSuspendModifier")
 object TubeApi {
@@ -23,6 +26,12 @@ object TubeApi {
             .setApplicationName(BuildConfig.APPLICATION_ID)
             .build()
     }
+
+    suspend fun requestBitmap(url: String) =
+            (URL(url).openConnection() as HttpURLConnection)
+                .apply { doInput = true }
+                .run { inputStream }
+                .run { BitmapFactory.decodeStream(this) }
 
     suspend fun requestVideo(id: String,
                              onResult: (playlist: TubeVideo) -> Unit,

@@ -94,6 +94,7 @@ class TubeService : Service(),
         ReceiverBus.notify(TubeState.CLOSE_APP)
         ReceiverBus.unsubscribe(this, *events)
 
+        notificationController.release()
         playerController.release()
         viewController.release()
     }
