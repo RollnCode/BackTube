@@ -1,10 +1,11 @@
 package com.rollncode.backtube.logic
 
+import android.net.Uri
 import com.rollncode.backtube.R.id
 
 object TubeState {
 
-    var currentVideoId = ""
+    var currentUri: Uri = Uri.EMPTY
     var windowShowed = false
 
     const val NOTHING = id.code_nothing

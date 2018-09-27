@@ -1,5 +1,6 @@
 package com.rollncode.backtube.logic
 
+import android.net.Uri
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlaybackQuality
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlaybackRate
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlayerError
@@ -73,7 +74,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
 
         video = null
         playlist = null
-        TubeState.currentVideoId = ""
+        TubeState.currentUri = Uri.EMPTY
 
         playerState = PlayerState.UNSTARTED
         playerReady = false

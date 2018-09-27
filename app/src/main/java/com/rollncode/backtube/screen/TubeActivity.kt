@@ -47,7 +47,7 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
 
         val intent = super.getIntent() ?: Intent()
         val event = when {
-            TubeState.currentVideoId.isEmpty() &&
+            TubeState.currentUri.toString().isEmpty() &&
                     intent.action == Intent.ACTION_MAIN ->
                 if (b != null && intent.getBooleanExtra(EXTRA_INTERNAL, false))
                     TubeState.NOTHING
@@ -104,9 +104,9 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
             if (uri == null)
                 attempt { uri = Uri.parse(intent.getStringExtra(Intent.EXTRA_TEXT)) }
             if (uri == null)
-                uri = Uri.parse(TubeState.currentVideoId)
+                uri = TubeState.currentUri
 
-            if (uri == null)
+            if (uri == null || uri.toString().isEmpty())
                 ReceiverBus.notify(TubeState.CLOSE_APP)
             else
                 TubeService.start(this, uri!!)
