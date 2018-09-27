@@ -1,4 +1,4 @@
-package com.rollncode.backtube
+package com.rollncode.backtube.player
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -20,22 +20,32 @@ import android.support.v4.content.ContextCompat
 import android.view.Gravity
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlaybackQuality
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlaybackRate
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlayerError
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.PlayerConstants.PlayerState
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerInitListener
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerListener
-import com.rollncode.receiver.ObjectsReceiver
-import com.rollncode.receiver.ReceiverBus
+import com.rollncode.backtube.R.color
+import com.rollncode.backtube.R.drawable
+import com.rollncode.backtube.R.mipmap
+import com.rollncode.backtube.R.string
+import com.rollncode.backtube.api.TubeApi
+import com.rollncode.backtube.api.TubePlaylist
+import com.rollncode.backtube.api.TubeVideo
+import com.rollncode.backtube.logic.OnPlayerControllerListener
+import com.rollncode.backtube.logic.PlayerController
+import com.rollncode.backtube.logic.TubeState
+import com.rollncode.backtube.logic.attempt
+import com.rollncode.backtube.logic.toLog
+import com.rollncode.backtube.logic.toPendingActivity
+import com.rollncode.backtube.logic.toPendingBroadcast
+import com.rollncode.backtube.logic.topPoint
+import com.rollncode.backtube.logic.whenDebug
+import com.rollncode.backtube.screen.TubeActivity
+import com.rollncode.utility.ICoroutines
+import com.rollncode.utility.receiver.ObjectsReceiver
+import com.rollncode.utility.receiver.ReceiverBus
 import kotlinx.coroutines.experimental.Job
 
 class TubeService : Service(),
         ObjectsReceiver,
-        YouTubePlayerInitListener,
-        YouTubePlayerListener,
+        OnPlayerControllerListener,
         ICoroutines {
 
     companion object {
@@ -58,9 +68,11 @@ class TubeService : Service(),
     private val events by lazy {
         intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP, TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE)
     }
+    private val playController by lazy { PlayerController(this) }
+
     private val view by lazy {
         YouTubePlayerView(this).apply {
-            initialize(this@TubeService, true)
+            initialize(playController, true)
             playerUIController.run {
                 showFullscreenButton(false)
                 showYouTubeButton(false)
@@ -70,15 +82,6 @@ class TubeService : Service(),
             }
         }
     }
-
-    private var player: YouTubePlayer? = null
-    private var playerReady = false
-    private var fromStart = false
-    private var videoId = ""
-        set(value) {
-            field = value
-            TubeState.currentVideoId = value
-        }
 
     private val wm by lazy {
         getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -96,15 +99,6 @@ class TubeService : Service(),
         }
     }
 
-    private val detailsNotification: NotificationCompat.Builder.() -> Unit = {
-        video?.run { setContentTitle(title) }
-        playlist?.run { setContentText("[$title] ${videos.indexOf(video)} of ${videos.size}") }
-    }
-
-    private var state = PlayerState.UNSTARTED
-    private var playlist: TubePlaylist? = null
-    private var video: TubeVideo? = null
-
     override fun onCreate() {
         super.onCreate()
 
@@ -117,45 +111,30 @@ class TubeService : Service(),
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) when {
             intent.hasExtra(EXTRA_URI) -> {
-                var success = false
-                attempt {
-                    val uri = Uri.parse(intent.getStringExtra(EXTRA_URI))
-                    var id = uri.getQueryParameter("v")
-                    if (id.isNullOrEmpty())
-                        id = uri.lastPathSegment
+                val uri = Uri.parse(intent.getStringExtra(EXTRA_URI))
+                var id = uri.getQueryParameter("v")
+                if (id.isNullOrEmpty())
+                    id = uri.lastPathSegment
 
-                    when {
-                        id?.contains("list") == true -> {
-
-                        }
-                        id?.isNotBlank() == true     -> {
-                            if (videoId == id) {
-                                return super.onStartCommand(intent, flags, startId)
-
-                            } else {
-                                success = true
-
-                                fromStart = true
-                                videoId = id
-
-                                execute {
-                                    TubeHelper.requestVideo(videoId) {
-                                        video = it
-                                        redrawState()
-                                    }
-                                }
-                            }
-                        }
+                ReceiverBus.notify(TubeState.WINDOW_SHOW)
+                when {
+                    id?.contains("list") == true -> execute {
+                        val listId = uri.getQueryParameter("list")
+                        if (listId == null)
+                            ReceiverBus.notify(TubeState.STOP)
+                        else
+                            TubeApi.requestPlaylist(listId,
+                                    { playController.play(it) },
+                                    { ReceiverBus.notify(TubeState.STOP) })
                     }
-                    toLog(id)
+                    id?.isNotBlank() == true     -> execute {
+                        TubeApi.requestVideo(id,
+                                { playController.play(it) },
+                                { ReceiverBus.notify(TubeState.STOP) })
+                    }
+                    else                         -> ReceiverBus.notify(TubeState.STOP)
                 }
-                if (success) {
-                    ReceiverBus.notify(TubeState.WINDOW_SHOW)
-                    ReceiverBus.notify(TubeState.PLAY)
-
-                } else {
-                    ReceiverBus.notify(TubeState.STOP)
-                }
+                toLog(id)
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -169,17 +148,14 @@ class TubeService : Service(),
 
         cancelJobs()
 
-        videoId = ""
+        TubeState.currentVideoId = ""
         TubeState.windowShowed = false
 
         ReceiverBus.unSubscribe(this, *events)
         ReceiverBus.notify(TubeState.CLOSE_APP)
 
-        attempt {
-            player?.removeListener(this)
-            player?.pause()
-            player = null
-        }
+        playController.recycle()
+
         attempt {
             view.release()
             wm.removeViewImmediate(view)
@@ -189,26 +165,9 @@ class TubeService : Service(),
 
     override fun onObjectsReceive(event: Int, vararg objects: Any) {
         when (event) {
-            TubeState.PLAY        -> player?.let {
-                if (!playerReady || videoId.isBlank())
-                    return
-                else
-                    toLog("PLAY: $videoId\t$fromStart")
-
-                if (fromStart) {
-                    fromStart = false
-                    it.loadVideo(videoId, 0F)
-
-                } else {
-                    it.play()
-                }
-            }
-            TubeState.PAUSE       -> {
-                player?.pause()
-            }
-            TubeState.STOP        -> {
-                super.stopSelf()
-            }
+            TubeState.PLAY        -> playController.play()
+            TubeState.PAUSE       -> playController.pause()
+            TubeState.STOP        -> super.stopSelf()
             TubeState.WINDOW_SHOW -> {
                 toLog("WINDOW_SHOW")
                 TubeState.windowShowed = true
@@ -231,63 +190,34 @@ class TubeService : Service(),
         }
     }
 
-    override fun onInitSuccess(player: YouTubePlayer) {
-        toLog("onInitSuccess")
-
-        playerReady = false
-        this.player = player
-        player.addListener(this)
-
-        ReceiverBus.notify(TubeState.PLAY)
+    override fun onLoadVideo(video: TubeVideo, playlist: TubePlaylist?) {
+        TubeState.currentVideoId = video.id
     }
 
-    override fun onReady() {
-        toLog("onReady")
+    override fun onPlay(video: TubeVideo, playlist: TubePlaylist?) {
+        startForeground {
+            setSmallIcon(drawable.notification_play)
 
-        playerReady = true
-        ReceiverBus.notify(TubeState.PLAY)
-    }
-
-    override fun onStateChange(state: PlayerState) {
-        this.state = state
-        redrawState()
-    }
-
-    private fun redrawState() {
-        when (state) {
-            PlayerState.PLAYING -> startForeground {
-                setSmallIcon(R.drawable.notification_play)
-                detailsNotification.invoke(this)
-
-                addAction(R.drawable.svg_pause, R.string.pause, TubeState.ACTION_PAUSE)
-                addAction(R.drawable.svg_toggle, R.string.toggle, TubeState.ACTION_TOGGLE)
-            }
-            PlayerState.PAUSED  -> startForeground {
-                setSmallIcon(R.drawable.notification_pause)
-                detailsNotification.invoke(this)
-
-                addAction(R.drawable.svg_play, R.string.play, TubeState.ACTION_PLAY)
-                addAction(R.drawable.svg_close, R.string.close, TubeState.ACTION_CLOSE)
-            }
-            else                -> toLog("onStateChange: $state", "pLog")
+            addAction(drawable.svg_pause, string.pause, TubeState.ACTION_PAUSE)
+            addAction(drawable.svg_toggle, string.toggle, TubeState.ACTION_TOGGLE)
         }
     }
 
-    override fun onPlaybackQualityChange(playbackQuality: PlaybackQuality) = Unit
-    override fun onVideoDuration(duration: Float) = Unit
-    override fun onCurrentSecond(second: Float) = Unit
-    override fun onVideoLoadedFraction(loadedFraction: Float) = Unit
-    override fun onPlaybackRateChange(playbackRate: PlaybackRate) = Unit
-    override fun onVideoId(videoId: String) = Unit
-    override fun onApiChange() = Unit
-    override fun onError(error: PlayerError) = Unit
+    override fun onPause(video: TubeVideo, playlist: TubePlaylist?) {
+        startForeground {
+            setSmallIcon(drawable.notification_pause)
+
+            addAction(drawable.svg_play, string.play, TubeState.ACTION_PLAY)
+            addAction(drawable.svg_close, string.close, TubeState.ACTION_CLOSE)
+        }
+    }
 
     private fun startForeground(block: NotificationCompat.Builder.() -> Unit = {}) =
             NotificationCompat.Builder(this, createNotificationChannel())
-                .setSmallIcon(R.drawable.notification_play)
-                .setContentTitle(getString(R.string.app_name))
-                .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
-                .setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
+                .setSmallIcon(drawable.notification_play)
+                .setContentTitle(getString(string.app_name))
+                .setColor(ContextCompat.getColor(this, color.colorPrimary))
+                .setLargeIcon(BitmapFactory.decodeResource(resources, mipmap.ic_launcher))
 
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX)

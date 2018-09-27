@@ -1,4 +1,4 @@
-package com.rollncode.backtube
+package com.rollncode.backtube.logic
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -9,6 +9,9 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
+import com.rollncode.backtube.BuildConfig
+import com.rollncode.backtube.R.attr
+import com.rollncode.backtube.R.dimen
 
 fun toLog(a: Any?, tag: String = "aLog"): Unit = whenDebug {
     when (a) {
@@ -54,22 +57,32 @@ val Context.topPoint: Int
 
         val value = TypedValue()
         val actionBarHeight =
-                if (theme.resolveAttribute(R.attr.actionBarSize, value, true))
+                if (theme.resolveAttribute(attr.actionBarSize, value, true))
                     TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
                 else
-                    resources.getDimensionPixelSize(R.dimen.abc_action_bar_default_height_material)
+                    resources.getDimensionPixelSize(dimen.abc_action_bar_default_height_material)
 
         return statusBarHeight + actionBarHeight
     }
 
-inline fun attempt(count: Int = 0, block: () -> Unit): Unit = (0..count).forEach { _ ->
-    try {
-        block.invoke()
-        return
+inline fun attempt(count: Int = 0, block: () -> Unit): Unit =
+        attempt(count, block, { })
 
-    } catch (e: Exception) {
-        toLog(e)
+inline fun attempt(count: Int,
+                   onTry: () -> Unit,
+                   onException: (Exception) -> Unit) {
+    var exception: Exception = IllegalStateException()
+    (0..count).forEach { _ ->
+        try {
+            onTry()
+            return
+
+        } catch (e: Exception) {
+            exception = e
+            toLog(e)
+        }
     }
+    onException(exception)
 }
 
 fun Intent.startActivity(context: Context) = context.startActivity(this)

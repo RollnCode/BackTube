@@ -1,4 +1,4 @@
-package com.rollncode.backtube
+package com.rollncode.backtube.screen
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -11,8 +11,16 @@ import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.rollncode.receiver.ObjectsReceiver
-import com.rollncode.receiver.ReceiverBus
+import android.widget.Toast
+import com.rollncode.backtube.R
+import com.rollncode.backtube.R.id
+import com.rollncode.backtube.logic.TubeState
+import com.rollncode.backtube.logic.canDrawOverlays
+import com.rollncode.backtube.logic.toLog
+import com.rollncode.backtube.logic.whenDebug
+import com.rollncode.backtube.player.TubeService
+import com.rollncode.utility.receiver.ObjectsReceiver
+import com.rollncode.utility.receiver.ReceiverBus
 
 class TubeActivity : AppCompatActivity(), ObjectsReceiver {
 
@@ -74,12 +82,12 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.menu_close -> {
+        id.menu_close -> {
             ReceiverBus.notify(TubeState.STOP)
             ReceiverBus.notify(TubeState.CLOSE_APP)
             true
         }
-        else            -> super.onOptionsItemSelected(item)
+        else          -> super.onOptionsItemSelected(item)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -110,7 +118,7 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
             if (youtube.resolveActivity(packageManager) == null)
-                TODO("Show toast that YouTube not installed")
+                Toast.makeText(this, R.string.no_youtube, Toast.LENGTH_LONG).show()
             else
                 super.startActivity(youtube)
 

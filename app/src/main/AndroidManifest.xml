@@ -18,7 +18,7 @@
         android:theme="@style/AppTheme">
         
         <activity
-            android:name=".TubeActivity"
+            android:name=".screen.TubeActivity"
             android:screenOrientation="portrait">
             
             <intent-filter>
@@ -53,10 +53,10 @@
             </intent-filter>
         </activity>
         
-        <service android:name=".TubeService"/>
+        <service android:name=".player.TubeService"/>
         
         <receiver
-            android:name=".TubeReceiver"
+            android:name=".player.TubeReceiver"
             android:permission="com.rollncode.backtube.RECEIVER">
             <intent-filter>
                 <action android:name="com.rollncode.backtube.ACTION_0"/>

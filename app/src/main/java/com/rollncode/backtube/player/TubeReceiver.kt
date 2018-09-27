@@ -1,9 +1,13 @@
-package com.rollncode.backtube
+package com.rollncode.backtube.player
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.rollncode.receiver.ReceiverBus
+import com.rollncode.backtube.logic.TubeState
+import com.rollncode.backtube.logic.startActivity
+import com.rollncode.backtube.logic.whenDebug
+import com.rollncode.backtube.screen.TubeActivity
+import com.rollncode.utility.receiver.ReceiverBus
 
 class TubeReceiver : BroadcastReceiver() {
 

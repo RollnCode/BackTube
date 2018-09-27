@@ -1,4 +1,4 @@
-package com.rollncode.receiver
+package com.rollncode.utility.receiver
 
 import android.annotation.SuppressLint
 import android.os.Handler

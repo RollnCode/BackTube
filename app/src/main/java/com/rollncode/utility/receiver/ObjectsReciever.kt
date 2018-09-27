@@ -1,4 +1,4 @@
-package com.rollncode.receiver
+package com.rollncode.utility.receiver
 
 import android.support.annotation.IdRes
 
