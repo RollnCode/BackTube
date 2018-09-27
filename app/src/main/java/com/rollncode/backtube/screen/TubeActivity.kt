@@ -15,8 +15,8 @@ import android.widget.Toast
 import com.rollncode.backtube.R
 import com.rollncode.backtube.R.id
 import com.rollncode.backtube.logic.TubeState
+import com.rollncode.backtube.logic.attempt
 import com.rollncode.backtube.logic.canDrawOverlays
-import com.rollncode.backtube.logic.toLog
 import com.rollncode.backtube.logic.whenDebug
 import com.rollncode.backtube.player.TubeService
 import com.rollncode.utility.receiver.ObjectsReceiver
@@ -100,14 +100,16 @@ class TubeActivity : AppCompatActivity(), ObjectsReceiver {
     override fun onObjectsReceive(event: Int, vararg objects: Any) = when (event) {
         TubeState.OPEN_TUBE        -> {
             val intent = super.getIntent() ?: Intent()
-            val uri = intent.dataString ?: intent.getStringExtra(Intent.EXTRA_TEXT) ?: TubeState.currentVideoId
+            var uri: Uri? = intent.data
+            if (uri == null)
+                attempt { uri = Uri.parse(intent.getStringExtra(Intent.EXTRA_TEXT)) }
+            if (uri == null)
+                uri = Uri.parse(TubeState.currentVideoId)
 
-            toLog(uri)
-
-            if (uri.isBlank())
+            if (uri == null)
                 ReceiverBus.notify(TubeState.CLOSE_APP)
             else
-                TubeService.start(this, uri)
+                TubeService.start(this, uri!!)
         }
         TubeState.CLOSE_APP        -> {
             super.finish()

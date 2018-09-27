@@ -68,7 +68,13 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         player?.pause()
     }
 
-    fun recycle() {
+    fun release() {
+        toLog("PlayerController.release")
+
+        video = null
+        playlist = null
+        TubeState.currentVideoId = ""
+
         playerState = PlayerState.UNSTARTED
         playerReady = false
         shouldPlay = false
@@ -79,12 +85,10 @@ class PlayerController(val listener: OnPlayerControllerListener) :
             player?.pause()
             player = null
         }
-        video = null
-        playlist = null
     }
 
     override fun onInitSuccess(player: YouTubePlayer) {
-        toLog("onInitSuccess")
+        toLog("PlayerController.onInitSuccess")
 
         playerReady = false
         this.player = player
@@ -92,7 +96,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
     }
 
     override fun onReady() {
-        toLog("onReady")
+        toLog("PlayerController.onReady")
 
         playerReady = true
         if (shouldPlay) {
@@ -115,7 +119,7 @@ class PlayerController(val listener: OnPlayerControllerListener) :
                     play()
                 }
             }
-            else                -> toLog("onStateChange: $playerState")
+            else                -> toLog("PlayerController.onStateChange: $playerState")
         }
     }
 

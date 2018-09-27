@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -17,10 +16,6 @@ import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
-import android.view.Gravity
-import android.view.WindowManager
-import android.view.WindowManager.LayoutParams
-import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView
 import com.rollncode.backtube.R.color
 import com.rollncode.backtube.R.drawable
 import com.rollncode.backtube.R.mipmap
@@ -31,11 +26,10 @@ import com.rollncode.backtube.api.TubeVideo
 import com.rollncode.backtube.logic.OnPlayerControllerListener
 import com.rollncode.backtube.logic.PlayerController
 import com.rollncode.backtube.logic.TubeState
-import com.rollncode.backtube.logic.attempt
+import com.rollncode.backtube.logic.ViewController
 import com.rollncode.backtube.logic.toLog
 import com.rollncode.backtube.logic.toPendingActivity
 import com.rollncode.backtube.logic.toPendingBroadcast
-import com.rollncode.backtube.logic.topPoint
 import com.rollncode.backtube.logic.whenDebug
 import com.rollncode.backtube.screen.TubeActivity
 import com.rollncode.utility.ICoroutines
@@ -50,11 +44,12 @@ class TubeService : Service(),
 
     companion object {
 
-        private const val EXTRA_URI = "EXTRA_0"
+        private const val ACTION_START = "com.rollncode.backtube.player.ACTION_START"
 
-        fun start(context: Context, uri: String) {
+        fun start(context: Context, uri: Uri) {
             val intent = Intent(context, TubeService::class.java)
-                .putExtra(EXTRA_URI, uri)
+                .setAction(ACTION_START)
+                .setData(uri)
 
             if (VERSION.SDK_INT >= VERSION_CODES.O)
                 context.startForegroundService(intent)
@@ -64,40 +59,10 @@ class TubeService : Service(),
     }
 
     override val jobs = mutableSetOf<Job>()
+    private val events = intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP, TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE)
 
-    private val events by lazy {
-        intArrayOf(TubeState.PLAY, TubeState.PAUSE, TubeState.STOP, TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE)
-    }
-    private val playController by lazy { PlayerController(this) }
-
-    private val view by lazy {
-        YouTubePlayerView(this).apply {
-            initialize(playController, true)
-            playerUIController.run {
-                showFullscreenButton(false)
-                showYouTubeButton(false)
-                showCustomAction1(false)
-                showCustomAction2(false)
-                showMenuButton(false)
-            }
-        }
-    }
-
-    private val wm by lazy {
-        getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    }
-    private val hideParams by lazy {
-        createWindowLayoutParams(1, 1)
-    }
-    private val showParams by lazy {
-        val metrics = resources.displayMetrics
-        val min = Math.min(metrics.heightPixels, metrics.widthPixels)
-
-        createWindowLayoutParams(min).apply {
-            gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
-            y = topPoint
-        }
-    }
+    private val playerController by lazy { PlayerController(this) }
+    private val viewController by lazy { ViewController(application, playerController) }
 
     override fun onCreate() {
         super.onCreate()
@@ -105,37 +70,40 @@ class TubeService : Service(),
         startForeground()
         ReceiverBus.subscribe(this, *events)
 
-        toLog("onCreate")
+        toLog("TubeService.onCreate")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null) when {
-            intent.hasExtra(EXTRA_URI) -> {
-                val uri = Uri.parse(intent.getStringExtra(EXTRA_URI))
-                var id = uri.getQueryParameter("v")
-                if (id.isNullOrEmpty())
-                    id = uri.lastPathSegment
+        if (intent != null && intent.action == ACTION_START) {
+            ReceiverBus.notify(TubeState.WINDOW_SHOW)
 
-                ReceiverBus.notify(TubeState.WINDOW_SHOW)
-                when {
-                    id?.contains("list") == true -> execute {
-                        val listId = uri.getQueryParameter("list")
-                        if (listId == null)
-                            ReceiverBus.notify(TubeState.STOP)
-                        else
-                            TubeApi.requestPlaylist(listId,
-                                    { playController.play(it) },
-                                    { ReceiverBus.notify(TubeState.STOP) })
-                    }
-                    id?.isNotBlank() == true     -> execute {
-                        TubeApi.requestVideo(id,
-                                { playController.play(it) },
+            val uri = intent.data ?: throw java.lang.IllegalStateException()
+            var id = uri.getQueryParameter("v")
+            if (id.isNullOrEmpty())
+                id = uri.lastPathSegment
+
+            when {
+                id?.contains("list") == true -> execute {
+                    TubeState.currentVideoId = id
+
+                    val listId = uri.getQueryParameter("list")
+                    if (listId == null)
+                        ReceiverBus.notify(TubeState.STOP)
+                    else
+                        TubeApi.requestPlaylist(listId,
+                                { playerController.play(it) },
                                 { ReceiverBus.notify(TubeState.STOP) })
-                    }
-                    else                         -> ReceiverBus.notify(TubeState.STOP)
                 }
-                toLog(id)
+                id?.isNotBlank() == true     -> execute {
+                    TubeState.currentVideoId = id
+
+                    TubeApi.requestVideo(id,
+                            { playerController.play(it) },
+                            { ReceiverBus.notify(TubeState.STOP) })
+                }
+                else                         -> ReceiverBus.notify(TubeState.STOP)
             }
+            toLog("TubeService.ACTION_START: $id")
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -148,50 +116,28 @@ class TubeService : Service(),
 
         cancelJobs()
 
-        TubeState.currentVideoId = ""
-        TubeState.windowShowed = false
-
         ReceiverBus.unSubscribe(this, *events)
         ReceiverBus.notify(TubeState.CLOSE_APP)
 
-        playController.recycle()
+        playerController.release()
+        viewController.release()
 
-        attempt {
-            view.release()
-            wm.removeViewImmediate(view)
-        }
-        toLog("onDestroy")
+        toLog("TubeService.onDestroy")
     }
 
     override fun onObjectsReceive(event: Int, vararg objects: Any) {
         when (event) {
-            TubeState.PLAY        -> playController.play()
-            TubeState.PAUSE       -> playController.pause()
+            TubeState.PLAY        -> playerController.play()
+            TubeState.PAUSE       -> playerController.pause()
             TubeState.STOP        -> super.stopSelf()
-            TubeState.WINDOW_SHOW -> {
-                toLog("WINDOW_SHOW")
-                TubeState.windowShowed = true
+            TubeState.WINDOW_SHOW -> viewController.show()
+            TubeState.WINDOW_HIDE -> viewController.hide()
 
-                if (view.layoutParams == null)
-                    wm.addView(view, showParams)
-                else
-                    wm.updateViewLayout(view, showParams)
-            }
-            TubeState.WINDOW_HIDE -> {
-                toLog("WINDOW_HIDE")
-                TubeState.windowShowed = false
-
-                if (view.layoutParams == null)
-                    wm.addView(view, hideParams)
-                else
-                    wm.updateViewLayout(view, hideParams)
-            }
             else                  -> whenDebug { throw IllegalStateException("Unknown event: $event") }
         }
     }
 
     override fun onLoadVideo(video: TubeVideo, playlist: TubePlaylist?) {
-        TubeState.currentVideoId = video.id
     }
 
     override fun onPlay(video: TubeVideo, playlist: TubePlaylist?) {
@@ -241,17 +187,6 @@ class TubeService : Service(),
         }
         return channelId
     }
-
-    @Suppress("DEPRECATION")
-    private fun createWindowLayoutParams(width: Int = WindowManager.LayoutParams.MATCH_PARENT,
-                                         height: Int = WindowManager.LayoutParams.WRAP_CONTENT
-                                        ) = WindowManager.LayoutParams(width, height,
-            if (VERSION.SDK_INT >= VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT)
 
     private fun NotificationCompat.Builder.addAction(@DrawableRes drawableRes: Int,
                                                      @StringRes stringRes: Int,
