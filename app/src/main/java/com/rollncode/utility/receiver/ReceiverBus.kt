@@ -35,7 +35,7 @@ object ReceiverBus {
         }
     }
 
-    fun unSubscribe(receiver: ObjectsReceiver, vararg events: Int) {
+    fun unsubscribe(receiver: ObjectsReceiver, vararg events: Int) {
         val id = receiver.hashCode()
         if (events.isEmpty()) {
             receivers.remove(id)
