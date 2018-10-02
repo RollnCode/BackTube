@@ -36,15 +36,11 @@ fun toLog(a: Any?, tag: String = "aLog"): Unit = whenDebug {
 inline val Activity.canDrawOverlays: Boolean
     get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
-fun Intent.toPendingActivity(context: Context, requestCode: Int = 0xA): PendingIntent =
-        PendingIntent.getActivity(context, requestCode, this, PendingIntent.FLAG_UPDATE_CURRENT)
-                ?: PendingIntent.getActivity(context, requestCode, this, 0)
-
-fun Intent.toPendingBroadcast(context: Context, requestCode: Int = 0xB): PendingIntent =
+fun Intent.toPendingBroadcast(context: Context, requestCode: Int = 0xA): PendingIntent =
         PendingIntent.getBroadcast(context, requestCode, this, PendingIntent.FLAG_UPDATE_CURRENT)
                 ?: PendingIntent.getBroadcast(context, requestCode, this, 0)
 
-val Context.actionBarHeight: Int
+inline val Context.actionBarHeight: Int
     @SuppressLint("PrivateResource")
     get() {
         val value = TypedValue()
@@ -53,7 +49,8 @@ val Context.actionBarHeight: Int
         else
             resources.getDimensionPixelSize(dimen.abc_action_bar_default_height_material)
     }
-val Context.statusBarHeight: Int
+
+inline val Context.statusBarHeight: Int
     get() {
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
         return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0

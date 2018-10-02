@@ -18,5 +18,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/view_player"
+        android:divider="@color/gray"
+        android:dividerHeight="1dp"
+        android:listSelector="@drawable/sel_trans"
         android:scrollbars="none"/>
 </RelativeLayout>

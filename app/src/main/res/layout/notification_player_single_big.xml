@@ -17,7 +17,7 @@
         android:layout_toStartOf="@+id/btn_pause"
         android:maxLines="4"
         android:paddingTop="@dimen/spacing"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_title"
         android:transitionName="@string/transition_video"
         tools:text="Video Title Example\nand something else nasdfn aksdnf lkasndf asdf"/>
     
@@ -30,7 +30,7 @@
         android:maxLines="1"
         android:paddingTop="@dimen/spacing"
         android:paddingBottom="@dimen/spacing"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_subtitle"
         android:transitionName="@string/transition_playlist"
         tools:text="[Playlist] 2 of 24\nand something else"/>
     

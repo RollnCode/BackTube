@@ -16,7 +16,7 @@
         android:layout_alignParentStart="true"
         android:layout_toStartOf="@+id/btn_previous"
         android:paddingTop="@dimen/spacing"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_title"
         android:transitionName="@string/transition_video"
         tools:text="Video Title Example"/>
     
@@ -27,7 +27,7 @@
         android:layout_alignEnd="@+id/tv_video"
         android:layout_alignBottom="@+id/iv_cover"
         android:paddingBottom="@dimen/spacing"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_subtitle"
         android:transitionName="@string/transition_playlist"
         tools:text="[Playlist] 2 of 24"/>
     

@@ -16,6 +16,9 @@ object TubeState {
     const val WINDOW_SHOW = R.id.code_show
     const val WINDOW_HIDE = R.id.code_hide
 
+    const val LIST_SHOW = R.id.code_list_show
+    const val LIST_HIGHLIGHT_ITEM = R.id.code_list_highlight_item
+
     const val SERVICE_START = R.id.code_service_start
     const val SERVICE_STOP = R.id.code_service_stop
     const val RELEASE = R.id.code_release

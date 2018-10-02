@@ -2,4 +2,7 @@
 <resources>
     <dimen name="spacing">8dp</dimen>
     <dimen name="buttons_size">56dp</dimen>
+    
+    <dimen name="text_title">16sp</dimen>
+    <dimen name="text_subtitle">12sp</dimen>
 </resources>

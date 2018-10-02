@@ -46,7 +46,10 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         play()
     }
 
-    fun play() {
+    fun play(index: Int? = null) {
+        if (index != null && query.setCurrent(index))
+            loadVideo = true
+
         if (query == IQueryController.EMPTY || player == null || !playerReady) {
             shouldPlay = true
 

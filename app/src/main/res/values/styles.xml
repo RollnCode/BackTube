@@ -16,7 +16,6 @@
     <style name="Notification.Button">
         <item name="android:layout_width">@dimen/buttons_size</item>
         <item name="android:layout_height">@dimen/buttons_size</item>
-        <item name="android:foreground">@drawable/sel_white</item>
         <item name="android:padding">@dimen/spacing</item>
         <item name="android:scaleType">fitCenter</item>
     </style>

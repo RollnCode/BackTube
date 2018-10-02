@@ -6,6 +6,7 @@ import android.app.Service
 import android.content.Context
 import android.net.Uri
 import com.rollncode.backtube.api.TubeApi
+import com.rollncode.backtube.api.TubeVideo
 import com.rollncode.backtube.logic.NotificationController
 import com.rollncode.backtube.logic.PlayerController
 import com.rollncode.backtube.logic.TUBE_PLAYLIST
@@ -13,6 +14,7 @@ import com.rollncode.backtube.logic.TUBE_VIDEO
 import com.rollncode.backtube.logic.TubeState
 import com.rollncode.backtube.logic.TubeUri
 import com.rollncode.backtube.logic.ViewController
+import com.rollncode.backtube.logic.toLog
 import com.rollncode.backtube.logic.whenDebug
 import com.rollncode.utility.ICoroutines
 import com.rollncode.utility.receiver.ObjectsReceiver
@@ -36,8 +38,11 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
 
     init {
         ReceiverBus.subscribe(this,
-                TubeState.PLAY, TubeState.PAUSE, TubeState.SERVICE_START, TubeState.SERVICE_STOP, TubeState.RELEASE,
-                TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE, TubeState.PREVIOUS, TubeState.NEXT)
+                TubeState.PLAY, TubeState.PAUSE, TubeState.SERVICE_START,
+                TubeState.SERVICE_STOP, TubeState.RELEASE,
+                TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE,
+                TubeState.LIST_SHOW, TubeState.LIST_HIGHLIGHT_ITEM,
+                TubeState.PREVIOUS, TubeState.NEXT)
     }
 
     fun attachContext(context: Context) {
@@ -64,13 +69,27 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
         when (tubeUri.type) {
             TUBE_VIDEO    -> execute {
                 TubeApi.requestVideo(tubeUri.id,
-                        { playerController?.play(it) },
-                        { ReceiverBus.notify(TubeState.SERVICE_STOP) })
+                        {
+                            toLog("requestVideo: $it")
+
+                            playerController?.play(it)
+                            ReceiverBus.notify(TubeState.LIST_SHOW, emptyList<TubeVideo>())
+                        },
+                        {
+                            ReceiverBus.notify(TubeState.SERVICE_STOP)
+                        })
             }
             TUBE_PLAYLIST -> execute {
                 TubeApi.requestPlaylist(tubeUri.id,
-                        { playerController?.play(it) },
-                        { ReceiverBus.notify(TubeState.SERVICE_STOP) })
+                        {
+                            toLog("requestPlaylist: $it")
+
+                            playerController?.play(it)
+                            ReceiverBus.notify(TubeState.LIST_SHOW, it.videos)
+                        },
+                        {
+                            ReceiverBus.notify(TubeState.SERVICE_STOP)
+                        })
             }
             else          -> ReceiverBus.notify(TubeState.SERVICE_STOP)
         }
@@ -88,19 +107,31 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
 
     override fun onObjectsReceive(event: Int, vararg objects: Any) {
         when (event) {
-            TubeState.PLAY          -> playerController?.play()
-            TubeState.PAUSE         -> playerController?.pause()
-            TubeState.PREVIOUS      -> playerController?.previous()
-            TubeState.NEXT          -> playerController?.next()
+            TubeState.PLAY                ->
+                if (objects.isEmpty())
+                    playerController?.play()
+                else
+                    playerController?.play(objects.first() as Int)
 
-            TubeState.WINDOW_SHOW   -> viewController?.show()
-            TubeState.WINDOW_HIDE   -> viewController?.hide()
+            TubeState.PAUSE               -> playerController?.pause()
+            TubeState.PREVIOUS            -> playerController?.previous()
+            TubeState.NEXT                -> playerController?.next()
 
-            TubeState.SERVICE_START -> TubeService.start(context)
-            TubeState.SERVICE_STOP  -> onServiceDestroy()
-            TubeState.RELEASE       -> release()
+            TubeState.WINDOW_SHOW         -> viewController?.show()
+            TubeState.WINDOW_HIDE         -> viewController?.hide()
 
-            else                    -> whenDebug { throw IllegalStateException("Unknown event: $event") }
+            TubeState.LIST_SHOW           -> {
+                @Suppress("UNCHECKED_CAST")
+                viewController?.showList(objects.first() as List<TubeVideo>)
+            }
+            TubeState.LIST_HIGHLIGHT_ITEM -> {
+                viewController?.highlightCurrent(objects.first() as Int)
+            }
+            TubeState.SERVICE_START       -> TubeService.start(context)
+            TubeState.SERVICE_STOP        -> onServiceDestroy()
+            TubeState.RELEASE             -> release()
+
+            else                          -> whenDebug { throw IllegalStateException("Unknown event: $event") }
         }
     }
 

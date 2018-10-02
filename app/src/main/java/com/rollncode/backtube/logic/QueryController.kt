@@ -2,6 +2,7 @@ package com.rollncode.backtube.logic
 
 import com.rollncode.backtube.api.TubePlaylist
 import com.rollncode.backtube.api.TubeVideo
+import com.rollncode.utility.receiver.ReceiverBus
 
 interface IQueryController {
 
@@ -18,8 +19,18 @@ interface IQueryController {
     val query: List<TubeVideo>
     var currentIndex: Int
 
-    fun current(): TubeVideo =
-            query[currentIndex]
+    fun current(): TubeVideo {
+        ReceiverBus.notify(TubeState.LIST_HIGHLIGHT_ITEM, currentIndex)
+        return query[currentIndex]
+    }
+
+    fun setCurrent(index: Int): Boolean {
+        val success = index in (0 until query.size)
+        if (success)
+            currentIndex = index
+
+        return success
+    }
 
     fun toNext(): Boolean {
         val success = currentIndex + 1 < query.size
