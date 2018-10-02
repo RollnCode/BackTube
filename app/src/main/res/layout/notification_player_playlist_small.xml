@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:background="@android:color/white"
-    tools:ignore="ContentDescription">
+    tools:ignore="ContentDescription"
+    tools:targetApi="lollipop">
     
     <TextView
         android:id="@+id/tv_video"
@@ -14,6 +15,7 @@
         android:layout_toStartOf="@+id/btn_previous"
         android:paddingTop="@dimen/spacing"
         android:textSize="14sp"
+        android:transitionName="@string/transition_video"
         tools:text="Video Title Example"/>
     
     <TextView
@@ -24,6 +26,7 @@
         android:layout_alignEnd="@+id/tv_video"
         android:paddingBottom="@dimen/spacing"
         android:textSize="12sp"
+        android:transitionName="@string/transition_playlist"
         tools:text="[Playlist] 2 of 24"/>
     
     <ImageView
@@ -32,7 +35,8 @@
         android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_pause"
-        android:src="@drawable/svg_previous"/>
+        android:src="@drawable/svg_previous"
+        android:transitionName="@string/transition_previous"/>
     
     <ImageView
         android:id="@+id/btn_pause"
@@ -40,7 +44,8 @@
         android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_play"
-        android:src="@drawable/svg_pause"/>
+        android:src="@drawable/svg_pause"
+        android:transitionName="@string/transition_pause"/>
     
     <ImageView
         android:id="@+id/btn_play"
@@ -49,6 +54,7 @@
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_next"
         android:src="@drawable/svg_play"
+        android:transitionName="@string/transition_play"
         android:visibility="gone"/>
     
     <ImageView
@@ -57,23 +63,17 @@
         android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_close"
-        android:src="@drawable/svg_next"/>
+        android:src="@drawable/svg_next"
+        android:transitionName="@string/transition_next"/>
     
     <ImageView
         android:id="@+id/btn_close"
         style="@style/Notification.Button"
         android:layout_width="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/btn_toggle"
-        android:src="@drawable/svg_close"/>
-    
-    <ImageView
-        android:id="@+id/btn_toggle"
-        style="@style/Notification.Button"
-        android:layout_width="wrap_content"
-        android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/iv_cover"
-        android:src="@drawable/svg_toggle"/>
+        android:src="@drawable/svg_close"
+        android:transitionName="@string/transition_close"/>
     
     <ImageView
         android:id="@+id/iv_cover"
@@ -82,5 +82,6 @@
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:scaleType="centerCrop"
-        android:src="@mipmap/ic_launcher"/>
+        android:src="@mipmap/ic_launcher"
+        android:transitionName="@string/transition_cover"/>
 </RelativeLayout>

@@ -21,7 +21,6 @@ import com.rollncode.backtube.R
 import com.rollncode.backtube.api.TubeApi
 import com.rollncode.backtube.api.TubePlaylist
 import com.rollncode.backtube.api.TubeVideo
-import com.rollncode.backtube.screen.TubeActivity
 import com.rollncode.utility.ICoroutines
 import kotlinx.coroutines.experimental.Job
 
@@ -59,21 +58,19 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setContentIntent(TubeActivity.newInstance(service).toPendingActivity(service))
+                .setContentIntent(getPendingBroadcast(TubeState.ACTION_TOGGLE))
 
                 .run {
+                    val (layoutSmall, layoutBig) =
+                            if (state.single)
+                                R.layout.notification_player_single_small to R.layout.notification_player_single_big
+                            else
+                                R.layout.notification_player_playlist_small to R.layout.notification_player_playlist_big
+
                     val modifications: RemoteViews.() -> Unit = {
-                        val singleVisibility = if (state.single) View.GONE else View.VISIBLE
-                        setViewVisibility(R.id.btn_previous, singleVisibility)
-                        setViewVisibility(R.id.btn_next, singleVisibility)
-
-                        val whenPlayVisibility = if (state.play) View.VISIBLE else View.GONE
-                        setViewVisibility(R.id.btn_toggle, whenPlayVisibility)
-                        setViewVisibility(R.id.btn_pause, whenPlayVisibility)
-
-                        val whenPauseVisibility = if (state.play) View.GONE else View.VISIBLE
-                        setViewVisibility(R.id.btn_close, whenPauseVisibility)
-                        setViewVisibility(R.id.btn_play, whenPauseVisibility)
+                        setViewVisibility(R.id.btn_pause, if (state.play) View.VISIBLE else View.GONE)
+                        setViewVisibility(R.id.btn_close, if (state.play) View.INVISIBLE else View.VISIBLE)
+                        setViewVisibility(R.id.btn_play, if (state.play) View.GONE else View.VISIBLE)
 
                         setTextViewText(R.id.tv_video, state.videoTitle)
                         setTextViewText(R.id.tv_playlist, state.playlistTitle)
@@ -86,13 +83,12 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
                         setOnClickPendingIntent(R.id.btn_pause, getPendingBroadcast(TubeState.ACTION_PAUSE))
                         setOnClickPendingIntent(R.id.btn_next, getPendingBroadcast(TubeState.ACTION_NEXT))
                         setOnClickPendingIntent(R.id.btn_close, getPendingBroadcast(TubeState.ACTION_CLOSE))
-                        setOnClickPendingIntent(R.id.btn_toggle, getPendingBroadcast(TubeState.ACTION_TOGGLE))
                     }
-                    RemoteViews(service.packageName, R.layout.notification_player_small)
+                    RemoteViews(service.packageName, layoutSmall)
                         .apply(modifications)
                         .run { setCustomContentView(this) }
 
-                    RemoteViews(service.packageName, R.layout.notification_player_big)
+                    RemoteViews(service.packageName, layoutBig)
                         .apply(modifications)
                         .run { setCustomBigContentView(this) }
 

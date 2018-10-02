@@ -4,4 +4,13 @@
     <string name="close">Close</string>
     <string name="loading">Loading</string>
     <string name="no_youtube">YouTube application is not found</string>
+    
+    <string name="transition_video" translatable="false">transition_video</string>
+    <string name="transition_playlist" translatable="false">transition_playlist</string>
+    <string name="transition_previous" translatable="false">transition_previous</string>
+    <string name="transition_pause" translatable="false">transition_pause</string>
+    <string name="transition_play" translatable="false">transition_play</string>
+    <string name="transition_next" translatable="false">transition_next</string>
+    <string name="transition_close" translatable="false">transition_close</string>
+    <string name="transition_cover" translatable="false">transition_cover</string>
 </resources>

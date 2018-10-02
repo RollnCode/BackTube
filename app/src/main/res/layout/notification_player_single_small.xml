@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:background="@android:color/white"
+    tools:ignore="ContentDescription"
+    tools:targetApi="lollipop">
+    
+    <TextView
+        android:id="@+id/tv_video"
+        style="@style/Notification.Title"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/btn_previous"
+        android:maxLines="2"
+        android:paddingTop="@dimen/spacing"
+        android:textSize="14sp"
+        android:transitionName="@string/transition_video"
+        tools:text="Video Title Example\nasdfasdf"/>
+    
+    <TextView
+        android:id="@+id/tv_playlist"
+        style="@style/Notification.Title"
+        android:layout_below="@+id/tv_video"
+        android:layout_alignStart="@+id/tv_video"
+        android:layout_alignEnd="@+id/tv_video"
+        android:paddingBottom="@dimen/spacing"
+        android:textSize="12sp"
+        android:transitionName="@string/transition_playlist"
+        android:visibility="gone"
+        tools:text="[Playlist] 2 of 24"/>
+    
+    <ImageView
+        android:id="@+id/btn_previous"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_pause"
+        android:src="@drawable/svg_previous"
+        android:transitionName="@string/transition_previous"
+        android:visibility="gone"/>
+    
+    <ImageView
+        android:id="@+id/btn_pause"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_play"
+        android:src="@drawable/svg_pause"
+        android:transitionName="@string/transition_pause"/>
+    
+    <ImageView
+        android:id="@+id/btn_play"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_next"
+        android:src="@drawable/svg_play"
+        android:transitionName="@string/transition_play"
+        android:visibility="gone"/>
+    
+    <ImageView
+        android:id="@+id/btn_next"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_close"
+        android:src="@drawable/svg_next"
+        android:transitionName="@string/transition_next"
+        android:visibility="gone"/>
+    
+    <ImageView
+        android:id="@+id/btn_close"
+        style="@style/Notification.Button"
+        android:layout_width="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/iv_cover"
+        android:src="@drawable/svg_close"
+        android:transitionName="@string/transition_close"/>
+    
+    <ImageView
+        android:id="@+id/iv_cover"
+        android:layout_width="@dimen/buttons_size"
+        android:layout_height="@dimen/buttons_size"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher"
+        android:transitionName="@string/transition_cover"/>
+</RelativeLayout>

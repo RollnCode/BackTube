@@ -1,5 +1,6 @@
 package com.rollncode.backtube.api
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -27,7 +28,7 @@ object TubeApi {
             .build()
     }
 
-    suspend fun requestBitmap(url: String) =
+    suspend fun requestBitmap(url: String): Bitmap =
             (URL(url).openConnection() as HttpURLConnection)
                 .apply { doInput = true }
                 .run { inputStream }
