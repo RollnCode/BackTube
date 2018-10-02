@@ -8,11 +8,8 @@ Because of [Device and Network Abuse](https://play.google.com/about/privacy-secu
 ## [The latest APK file checkout here.](https://github.com/RollnCode/BackTube/releases)
 
 # How to use the App
-
 1. Launch YouTube app
-2. Press "Share" button that located below each video
+2. Press "Share" button that located below each video or playlist
 3. Select "BackTube" app like receiver of link
-4. Wait few seconds until video player show
-5. Press "Play" button
-6. Block screen or Press home button and listen video
-7. After you end - press "X" (at top right corner) at launched App screen
+4. Wait few seconds until video player appears
+5. Block screen or Press home button and listen video
