@@ -11,60 +11,45 @@
     <TextView
         android:id="@+id/tv_video"
         style="@style/Notification.Title"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/tv_playlist"
         android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/iv_cover"
+        android:layout_toStartOf="@+id/btn_pause"
         android:maxLines="4"
         android:paddingTop="@dimen/spacing"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:transitionName="@string/transition_video"
-        tools:text="Video\nTitle Example\nand\n something else"/>
+        tools:text="Video Title Example\nand something else nasdfn aksdnf lkasndf asdf"/>
     
     <TextView
         android:id="@+id/tv_playlist"
         style="@style/Notification.Title"
-        android:layout_below="@+id/tv_video"
         android:layout_alignStart="@+id/tv_video"
         android:layout_alignEnd="@+id/tv_video"
+        android:layout_alignBottom="@+id/iv_cover"
+        android:maxLines="1"
         android:paddingTop="@dimen/spacing"
         android:paddingBottom="@dimen/spacing"
         android:textSize="12sp"
         android:transitionName="@string/transition_playlist"
-        android:visibility="gone"
         tools:text="[Playlist] 2 of 24\nand something else"/>
-    
-    <ImageView
-        android:id="@+id/btn_previous"
-        style="@style/Notification.Button"
-        android:layout_alignBottom="@+id/iv_cover"
-        android:layout_alignParentStart="true"
-        android:src="@drawable/svg_previous"
-        android:transitionName="@string/transition_previous"
-        android:visibility="gone"/>
     
     <ImageView
         android:id="@+id/btn_pause"
         style="@style/Notification.Button"
-        android:layout_alignBottom="@+id/btn_previous"
-        android:layout_toEndOf="@+id/btn_previous"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/btn_play"
         android:src="@drawable/svg_pause"
-        android:transitionName="@string/transition_pause"/>
+        android:transitionName="@string/transition_pause"
+        tools:visibility="gone"/>
     
     <ImageView
         android:id="@+id/btn_play"
         style="@style/Notification.Button"
-        android:layout_alignBottom="@+id/btn_previous"
-        android:layout_toEndOf="@+id/btn_pause"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/iv_cover"
         android:src="@drawable/svg_play"
         android:transitionName="@string/transition_play"/>
-    
-    <ImageView
-        android:id="@+id/btn_next"
-        style="@style/Notification.Button"
-        android:layout_alignBottom="@+id/btn_previous"
-        android:layout_toEndOf="@+id/btn_play"
-        android:src="@drawable/svg_next"
-        android:transitionName="@string/transition_next"
-        android:visibility="gone"/>
     
     <ImageView
         android:id="@+id/iv_cover"

@@ -112,7 +112,7 @@ class NotificationController(var context: Context) : OnPlayerControllerListener,
         state = NotificationState(
                 video.title,
                 if (playlist == null)
-                    ""
+                    video.channelTitle
                 else
                     "${playlist.title} - ${playlist.videos.indexOf(video) + 1} of ${playlist.videos.size}",
                 playlist == null)

@@ -19,15 +19,18 @@ data class TubePlaylist(
 data class TubeVideo(
         val id: String,
         val title: String,
+        val channelTitle: String,
         val thumbnail: String) {
 
     constructor(video: Video) : this(
             video.id,
             video.snippet.title,
+            video.snippet.channelTitle,
             video.snippet.thumbnails.medium.url)
 
     constructor(video: PlaylistItem) : this(
             video.contentDetails.videoId,
             video.snippet.title,
+            "",
             video.snippet.thumbnails.medium.url)
 }

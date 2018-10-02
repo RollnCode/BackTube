@@ -99,6 +99,7 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
 
     private fun release() {
         ReceiverBus.notify(TubeState.CLOSE_APP)
+        service.clear()
         cancelJobs()
 
         notificationController?.release()

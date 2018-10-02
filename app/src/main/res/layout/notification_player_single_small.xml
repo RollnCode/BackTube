@@ -11,34 +11,25 @@
     <TextView
         android:id="@+id/tv_video"
         style="@style/Notification.Title"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/tv_playlist"
         android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/btn_previous"
-        android:maxLines="2"
+        android:layout_toStartOf="@+id/btn_pause"
         android:paddingTop="@dimen/spacing"
         android:textSize="14sp"
         android:transitionName="@string/transition_video"
-        tools:text="Video Title Example\nasdfasdf"/>
+        tools:text="Video Title Example"/>
     
     <TextView
         android:id="@+id/tv_playlist"
         style="@style/Notification.Title"
-        android:layout_below="@+id/tv_video"
         android:layout_alignStart="@+id/tv_video"
         android:layout_alignEnd="@+id/tv_video"
+        android:layout_alignBottom="@+id/iv_cover"
         android:paddingBottom="@dimen/spacing"
         android:textSize="12sp"
         android:transitionName="@string/transition_playlist"
-        android:visibility="gone"
         tools:text="[Playlist] 2 of 24"/>
-    
-    <ImageView
-        android:id="@+id/btn_previous"
-        style="@style/Notification.Button"
-        android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/btn_pause"
-        android:src="@drawable/svg_previous"
-        android:transitionName="@string/transition_previous"
-        android:visibility="gone"/>
     
     <ImageView
         android:id="@+id/btn_pause"
@@ -52,19 +43,10 @@
         android:id="@+id/btn_play"
         style="@style/Notification.Button"
         android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/btn_next"
+        android:layout_toStartOf="@+id/iv_cover"
         android:src="@drawable/svg_play"
         android:transitionName="@string/transition_play"
-        android:visibility="gone"/>
-    
-    <ImageView
-        android:id="@+id/btn_next"
-        style="@style/Notification.Button"
-        android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/iv_cover"
-        android:src="@drawable/svg_next"
-        android:transitionName="@string/transition_next"
-        android:visibility="gone"/>
+        tools:visibility="gone"/>
     
     <ImageView
         android:id="@+id/iv_cover"
