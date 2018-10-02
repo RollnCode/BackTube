@@ -3,6 +3,8 @@ package com.rollncode.backtube.player
 import android.annotation.SuppressLint
 import android.app.Application
 import android.app.Service
+import android.content.Context
+import android.net.Uri
 import com.rollncode.backtube.api.TubeApi
 import com.rollncode.backtube.logic.NotificationController
 import com.rollncode.backtube.logic.PlayerController
@@ -38,36 +40,41 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
                 TubeState.WINDOW_SHOW, TubeState.WINDOW_HIDE, TubeState.PREVIOUS, TubeState.NEXT)
     }
 
-    fun onServiceCreated(service: Service) {
-        context = service.application
-        this.service = SoftReference(service)
+    fun attachContext(context: Context) {
+        this.context = context.applicationContext as Application
 
         if (notificationController == null) {
-            notificationController = NotificationController(service)
+            notificationController = NotificationController(this.context)
             playerController = PlayerController(notificationController ?: throw NullPointerException())
-            viewController = ViewController(context, playerController ?: throw NullPointerException())
+            viewController = ViewController(this.context, playerController ?: throw NullPointerException())
         }
-        notificationController?.context = service
+        if (context is Service) {
+            this.service = SoftReference(context)
+            notificationController?.context = context
+        }
         notificationController?.showNotification()
     }
 
-    fun onTubeUri(uri: TubeUri) {
-        ReceiverBus.notify(TubeState.WINDOW_SHOW)
-        TubeState.currentUri = uri.original
+    fun play(context: Context, uri: Uri) {
+        attachContext(context)
 
-        when (uri.type) {
+        val tubeUri = TubeUri(uri)
+        TubeState.currentUri = tubeUri.original
+
+        when (tubeUri.type) {
             TUBE_VIDEO    -> execute {
-                TubeApi.requestVideo(uri.id,
+                TubeApi.requestVideo(tubeUri.id,
                         { playerController?.play(it) },
                         { ReceiverBus.notify(TubeState.SERVICE_STOP) })
             }
             TUBE_PLAYLIST -> execute {
-                TubeApi.requestPlaylist(uri.id,
+                TubeApi.requestPlaylist(tubeUri.id,
                         { playerController?.play(it) },
                         { ReceiverBus.notify(TubeState.SERVICE_STOP) })
             }
             else          -> ReceiverBus.notify(TubeState.SERVICE_STOP)
         }
+        ReceiverBus.notify(TubeState.WINDOW_SHOW)
     }
 
     fun onServiceDestroy() {

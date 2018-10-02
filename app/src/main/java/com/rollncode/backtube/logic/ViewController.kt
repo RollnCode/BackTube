@@ -1,16 +1,19 @@
 package com.rollncode.backtube.logic
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.graphics.PixelFormat
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.support.v4.view.GravityCompat
-import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView
+import com.rollncode.backtube.R
 
+@SuppressLint("InflateParams")
 class ViewController(context: Application, playerController: PlayerController) {
 
     private val wm by lazy {
@@ -18,7 +21,11 @@ class ViewController(context: Application, playerController: PlayerController) {
     }
 
     private val view by lazy {
-        YouTubePlayerView(context).apply {
+        LayoutInflater.from(context).inflate(R.layout.view_player, null, false)
+    }
+
+    private val viewPlayer by lazy {
+        view.findViewById<YouTubePlayerView>(R.id.view_player).apply {
             initialize(playerController, true)
             playerUIController.run {
                 showFullscreenButton(false)
@@ -27,6 +34,9 @@ class ViewController(context: Application, playerController: PlayerController) {
                 showCustomAction2(false)
                 showMenuButton(false)
             }
+            val params = layoutParams
+            if (params is MarginLayoutParams)
+                params.topMargin = context.actionBarHeight + context.statusBarHeight
         }
     }
 
@@ -38,10 +48,7 @@ class ViewController(context: Application, playerController: PlayerController) {
         val metrics = context.resources.displayMetrics
         val min = Math.min(metrics.heightPixels, metrics.widthPixels)
 
-        createWindowLayoutParams(min).apply {
-            gravity = GravityCompat.START or Gravity.TOP
-            y = context.actionBarHeight + context.statusBarHeight
-        }
+        createWindowLayoutParams(min)
     }
 
     fun show() {
@@ -52,6 +59,8 @@ class ViewController(context: Application, playerController: PlayerController) {
             wm.addView(view, showParams)
         else
             wm.updateViewLayout(view, showParams)
+
+        viewPlayer
     }
 
     fun hide() {
@@ -69,13 +78,13 @@ class ViewController(context: Application, playerController: PlayerController) {
         toLog("ViewController.release")
         TubeState.windowShowed = false
 
-        view.release()
+        viewPlayer.release()
         wm.removeViewImmediate(view)
     }
 
     @Suppress("DEPRECATION")
     private fun createWindowLayoutParams(width: Int = WindowManager.LayoutParams.MATCH_PARENT,
-                                         height: Int = WindowManager.LayoutParams.WRAP_CONTENT
+                                         height: Int = WindowManager.LayoutParams.MATCH_PARENT
                                         ) = WindowManager.LayoutParams(width, height,
             if (VERSION.SDK_INT >= VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY

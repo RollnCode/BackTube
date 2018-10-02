@@ -1,12 +1,11 @@
 package com.rollncode.backtube.logic
 
-import android.content.Intent
 import android.net.Uri
 import android.support.annotation.StringDef
 
-class TubeUri(intent: Intent) {
+class TubeUri(uri: Uri) {
 
-    val original: Uri
+    val original = uri.checkHierarchical()
     var id: String = ""
         private set
     @TubeType
@@ -14,7 +13,6 @@ class TubeUri(intent: Intent) {
         private set
 
     init {
-        original = retrieveUri(intent)
         var parameter = original.getQueryParameter("v")
         if (parameter.isNullOrEmpty())
             parameter = original.lastPathSegment
@@ -32,16 +30,15 @@ class TubeUri(intent: Intent) {
         }
     }
 
-    private fun retrieveUri(intent: Intent): Uri {
-        var uri = intent.data ?: throw java.lang.IllegalStateException()
-        if (!uri.isHierarchical) {
-            val uriString = uri.toString()
-            uri = Uri.parse(uriString.substring(uriString.indexOf(": ") + 2))
-        }
-        return uri
-    }
-
     override fun toString() = "[$type]$original{$id}"
+}
+
+private fun Uri.checkHierarchical(): Uri {
+    if (isHierarchical)
+        return this
+
+    val uriString = toString()
+    return Uri.parse(uriString.substring(uriString.indexOf(": ") + 2))
 }
 
 @StringDef(TUBE_VIDEO, TUBE_PLAYLIST, TUBE_IGNORE)

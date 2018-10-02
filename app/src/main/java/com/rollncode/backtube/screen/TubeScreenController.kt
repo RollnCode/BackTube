@@ -21,7 +21,7 @@ import com.rollncode.backtube.logic.TubeState
 import com.rollncode.backtube.logic.attempt
 import com.rollncode.backtube.logic.canDrawOverlays
 import com.rollncode.backtube.logic.whenDebug
-import com.rollncode.backtube.player.TubeService
+import com.rollncode.backtube.player.TubePlayer
 import com.rollncode.utility.receiver.ObjectsReceiver
 import com.rollncode.utility.receiver.ReceiverBus
 
@@ -95,7 +95,7 @@ class TubeScreenController(private val activity: AppCompatActivity,
             if (uri == null || uri.toString().isEmpty())
                 ReceiverBus.notify(TubeState.CLOSE_APP)
             else
-                TubeService.start(activity, uri!!)
+                TubePlayer.play(activity, uri!!)
         }
         TubeState.CLOSE_APP        -> activity.finish()
         TubeState.OPEN_YOUTUBE     -> {
@@ -115,7 +115,7 @@ class TubeScreenController(private val activity: AppCompatActivity,
                 activity.startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:${activity.packageName}")), requestOverlay)
             else
-                throw IllegalStateException()
+                whenDebug { throw IllegalStateException() }
         }
         else                       -> whenDebug { throw IllegalStateException("Unknown event: $event") }
     }
