@@ -75,11 +75,6 @@ class TubeScreenController(private val activity: AppCompatActivity,
         ReceiverBus.notify(event, intent)
     }
 
-    fun closeBackTube() {
-        ReceiverBus.notify(TubeState.STOP)
-        ReceiverBus.notify(TubeState.CLOSE_APP)
-    }
-
     fun onActivityResult(requestCode: Int) {
         if (requestCode == requestOverlay)
             ReceiverBus.notify(if (activity.canDrawOverlays)

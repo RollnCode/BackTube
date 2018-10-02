@@ -22,42 +22,48 @@ import com.rollncode.backtube.api.TubeApi
 import com.rollncode.backtube.api.TubePlaylist
 import com.rollncode.backtube.api.TubeVideo
 import com.rollncode.utility.ICoroutines
+import com.rollncode.utility.receiver.ReceiverBus
 import kotlinx.coroutines.experimental.Job
 
-class NotificationController(private val service: Service) : OnPlayerControllerListener, ICoroutines {
+class NotificationController(var context: Context) : OnPlayerControllerListener, ICoroutines {
+
+    private val notificationManager by lazy { context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
 
     private val channelId by lazy {
         val channelId = "com.rollncode.backtube"
-        if (VERSION.SDK_INT >= VERSION_CODES.O)
-            (service.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-                .createNotificationChannel(NotificationChannel(
-                        channelId, getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT)
+        if (VERSION.SDK_INT >= VERSION_CODES.O) notificationManager.createNotificationChannel(
+                NotificationChannel(channelId, getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT)
                     .apply {
                         lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                         lightColor = getColor(R.color.colorPrimary)
                     })
+
         channelId
     }
 
     override val jobs = mutableSetOf<Job>()
+    private val notificationId = 0xA
 
-    private val defaultLargeIcon by lazy { BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher) }
-    private var state = NotificationState(getString(R.string.app_name), getString(R.string.loading))
+    private var state = NotificationState(getString(R.string.app_name),
+            getString(R.string.loading),
+            largeIcon = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
 
     fun release() {
+        context = context.applicationContext
         cancelJobs()
     }
 
-    fun startForeground(onBuilder: NotificationCompat.Builder.() -> Unit = { }) =
-            NotificationCompat.Builder(service, channelId)
-                .setContentTitle(getString(R.string.app_name))
-                .setSmallIcon(R.drawable.notification_play)
+    fun showNotification(onBuilder: NotificationCompat.Builder.() -> Unit = { }) =
+            NotificationCompat.Builder(context, channelId)
                 .setColor(getColor(R.color.colorPrimary))
-                .setLargeIcon(defaultLargeIcon)
+                .setSmallIcon(state.smallIcon)
+                .setLargeIcon(state.largeIcon)
+                .setContentTitle(state.videoTitle)
+                .setContentText(state.playlistTitle)
 
-                .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setDeleteIntent(getPendingBroadcast(TubeState.ACTION_CLOSE))
                 .setContentIntent(getPendingBroadcast(TubeState.ACTION_TOGGLE))
 
                 .run {
@@ -69,7 +75,6 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
 
                     val modifications: RemoteViews.() -> Unit = {
                         setViewVisibility(R.id.btn_pause, if (state.play) View.VISIBLE else View.GONE)
-                        setViewVisibility(R.id.btn_close, if (state.play) View.INVISIBLE else View.VISIBLE)
                         setViewVisibility(R.id.btn_play, if (state.play) View.GONE else View.VISIBLE)
 
                         setTextViewText(R.id.tv_video, state.videoTitle)
@@ -82,22 +87,26 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
                         setOnClickPendingIntent(R.id.btn_play, getPendingBroadcast(TubeState.ACTION_PLAY))
                         setOnClickPendingIntent(R.id.btn_pause, getPendingBroadcast(TubeState.ACTION_PAUSE))
                         setOnClickPendingIntent(R.id.btn_next, getPendingBroadcast(TubeState.ACTION_NEXT))
-                        setOnClickPendingIntent(R.id.btn_close, getPendingBroadcast(TubeState.ACTION_CLOSE))
                     }
-                    RemoteViews(service.packageName, layoutSmall)
+                    RemoteViews(context.packageName, layoutSmall)
                         .apply(modifications)
                         .run { setCustomContentView(this) }
 
-                    RemoteViews(service.packageName, layoutBig)
+                    RemoteViews(context.packageName, layoutBig)
                         .apply(modifications)
                         .run { setCustomBigContentView(this) }
 
                     onBuilder.invoke(this)
-                    service.startForeground(0xA, build())
+
+                    val ctx = context
+                    if (ctx is Service)
+                        ctx.startForeground(notificationId, build())
+                    else
+                        notificationManager.notify(notificationId, build())
                 }
 
-    private fun getString(@StringRes stringRes: Int) = service.getString(stringRes)
-    private fun getColor(@ColorRes colorRes: Int) = ContextCompat.getColor(service, colorRes)
+    private fun getString(@StringRes stringRes: Int) = context.getString(stringRes)
+    private fun getColor(@ColorRes colorRes: Int) = ContextCompat.getColor(context, colorRes)
 
     override fun onNewVideo(video: TubeVideo, playlist: TubePlaylist?) {
         state = NotificationState(
@@ -110,7 +119,7 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
         execute {
             attempt(2) {
                 state.largeIcon = TubeApi.requestBitmap(video.thumbnail)
-                redrawNotification()
+                showNotification()
             }
         }
     }
@@ -119,24 +128,19 @@ class NotificationController(private val service: Service) : OnPlayerControllerL
         state.play = true
         state.smallIcon = R.drawable.notification_play
 
-        redrawNotification()
+        showNotification()
+        ReceiverBus.notify(TubeState.SERVICE_START)
     }
 
     override fun onPause(video: TubeVideo, playlist: TubePlaylist?) {
         state.play = false
         state.smallIcon = R.drawable.notification_pause
 
-        redrawNotification()
+        showNotification()
+        ReceiverBus.notify(TubeState.SERVICE_STOP)
     }
 
-    private fun redrawNotification() = startForeground {
-        setSmallIcon(state.smallIcon)
-        setLargeIcon(state.largeIcon)
-        setContentTitle(state.videoTitle)
-        setContentText(state.playlistTitle)
-    }
-
-    private fun getPendingBroadcast(action: String) = Intent(action).toPendingBroadcast(service, action.hashCode())
+    private fun getPendingBroadcast(action: String) = Intent(action).toPendingBroadcast(context, action.hashCode())
 }
 
 private data class NotificationState(

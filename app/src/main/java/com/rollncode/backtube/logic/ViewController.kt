@@ -56,6 +56,7 @@ class ViewController(context: Application, playerController: PlayerController) {
 
     fun hide() {
         toLog("ViewController.hide")
+
         TubeState.windowShowed = false
 
         if (view.layoutParams == null)

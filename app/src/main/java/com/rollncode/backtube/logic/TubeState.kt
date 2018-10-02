@@ -10,11 +10,15 @@ object TubeState {
 
     const val PLAY = R.id.code_play
     const val PAUSE = R.id.code_pause
-    const val STOP = R.id.code_stop
     const val PREVIOUS = R.id.code_previous
     const val NEXT = R.id.code_next
+
     const val WINDOW_SHOW = R.id.code_show
     const val WINDOW_HIDE = R.id.code_hide
+
+    const val SERVICE_START = R.id.code_service_start
+    const val SERVICE_STOP = R.id.code_service_stop
+    const val RELEASE = R.id.code_release
 
     const val NOTHING = R.id.code_nothing
     const val OPEN_TUBE = R.id.code_tube

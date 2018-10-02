@@ -34,7 +34,6 @@
     <ImageView
         android:id="@+id/btn_previous"
         style="@style/Notification.Button"
-        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_pause"
         android:src="@drawable/svg_previous"
@@ -44,7 +43,6 @@
     <ImageView
         android:id="@+id/btn_pause"
         style="@style/Notification.Button"
-        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_play"
         android:src="@drawable/svg_pause"
@@ -53,7 +51,6 @@
     <ImageView
         android:id="@+id/btn_play"
         style="@style/Notification.Button"
-        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/btn_next"
         android:src="@drawable/svg_play"
@@ -63,21 +60,11 @@
     <ImageView
         android:id="@+id/btn_next"
         style="@style/Notification.Button"
-        android:layout_width="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/btn_close"
+        android:layout_toStartOf="@+id/iv_cover"
         android:src="@drawable/svg_next"
         android:transitionName="@string/transition_next"
         android:visibility="gone"/>
-    
-    <ImageView
-        android:id="@+id/btn_close"
-        style="@style/Notification.Button"
-        android:layout_width="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/iv_cover"
-        android:src="@drawable/svg_close"
-        android:transitionName="@string/transition_close"/>
     
     <ImageView
         android:id="@+id/iv_cover"

@@ -13,20 +13,20 @@ class TubeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val event = when (intent.action) {
-            TubeState.ACTION_PLAY   -> TubeState.PLAY
-            TubeState.ACTION_PAUSE  -> TubeState.PAUSE
-            TubeState.ACTION_CLOSE  -> TubeState.STOP
-            TubeState.ACTION_TOGGLE -> {
+            TubeState.ACTION_PLAY     -> TubeState.PLAY
+            TubeState.ACTION_PAUSE    -> TubeState.PAUSE
+            TubeState.ACTION_CLOSE    -> TubeState.RELEASE
+            TubeState.ACTION_TOGGLE   -> {
                 context.sendBroadcast(Intent((Intent.ACTION_CLOSE_SYSTEM_DIALOGS)))
                 if (TubeState.windowShowed)
                     TubeState.CLOSE_APP
                 else
                     return TubeActivity.newInstance(context).startActivity(context)
             }
-            TubeState.ACTION_PREVIOUS ->TubeState.PREVIOUS
-            TubeState.ACTION_NEXT ->TubeState.NEXT
+            TubeState.ACTION_PREVIOUS -> TubeState.PREVIOUS
+            TubeState.ACTION_NEXT     -> TubeState.NEXT
 
-            else                    -> return whenDebug { throw IllegalStateException("Unknown intent action: ${intent.action}") }
+            else                      -> return whenDebug { throw IllegalStateException("Unknown intent action: ${intent.action}") }
         }
         ReceiverBus.notify(event)
     }
