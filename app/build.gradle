@@ -70,5 +70,8 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$vSupport"
 
     implementation "com.pierfrancescosoffritti.androidyoutubeplayer:core:8.0.1"
-    implementation "com.google.apis:google-api-services-youtube:v3-rev205-1.25.0"
+    implementation("com.google.apis:google-api-services-youtube:v3-rev205-1.25.0") {
+        exclude module: "commons-logging"
+        exclude module: "httpclient"
+    }
 }
