@@ -72,7 +72,7 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
                         {
                             toLog("requestVideo: $it")
 
-                            playerController?.play(it)
+                            playerController?.play(it, tubeUri.timeReference)
                             ReceiverBus.notify(TubeState.LIST_SHOW, emptyList<TubeVideo>())
                         },
                         {
@@ -84,7 +84,19 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
                         {
                             toLog("requestPlaylist: $it")
 
-                            playerController?.play(it)
+                            var index: Int? = null
+                            var startSeconds = 0
+                            var i = 0
+
+                            for (video in it.videos) {
+                                if (video.id == tubeUri.videoId) {
+                                    index = i
+                                    startSeconds = tubeUri.timeReference
+                                    break
+                                }
+                                i++
+                            }
+                            playerController?.play(it, index, startSeconds)
                             ReceiverBus.notify(TubeState.LIST_SHOW, it.videos)
                         },
                         {
@@ -107,12 +119,11 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
 
     override fun onObjectsReceive(event: Int, vararg objects: Any) {
         when (event) {
-            TubeState.PLAY                ->
-                if (objects.isEmpty())
-                    playerController?.play()
-                else
-                    playerController?.play(objects.first() as Int)
-
+            TubeState.PLAY                -> when (objects.size) {
+                0 -> playerController?.play()
+                1 -> playerController?.play(objects.first() as Int)
+                2 -> playerController?.play(objects.first() as Int, objects[1] as Int)
+            }
             TubeState.PAUSE               -> playerController?.pause()
             TubeState.PREVIOUS            -> playerController?.previous()
             TubeState.NEXT                -> playerController?.next()

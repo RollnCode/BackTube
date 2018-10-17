@@ -26,38 +26,44 @@ class PlayerController(val listener: OnPlayerControllerListener) :
 
     private var query = IQueryController.EMPTY
 
-    fun play(video: TubeVideo) {
+    private var tempIndex: Int? = null
+    private var tempStartSeconds = 0
+
+    fun play(video: TubeVideo, startSeconds: Int = 0) {
         if (this.video == video) return
         this.video = video
         playlist = null
 
         query = video.createQueryController()
         loadVideo = true
-        play()
+        play(startSeconds = startSeconds)
     }
 
-    fun play(playlist: TubePlaylist) {
+    fun play(playlist: TubePlaylist,
+             index: Int? = null, startSeconds: Int = 0) {
         if (this.playlist == playlist) return
         this.playlist = playlist
         video = null
 
         query = playlist.createQueryController()
         loadVideo = true
-        play()
+        play(index, startSeconds)
     }
 
-    fun play(index: Int? = null) {
+    fun play(index: Int? = null, startSeconds: Int = 0) {
         if (index != null && query.setCurrent(index))
             loadVideo = true
 
         if (query == IQueryController.EMPTY || player == null || !playerReady) {
             shouldPlay = true
+            tempIndex = index
+            tempStartSeconds = startSeconds
 
         } else if (loadVideo) {
             loadVideo = false
 
             val video = query.current()
-            player?.loadVideo(video.id, 0F)
+            player?.loadVideo(video.id, startSeconds.toFloat())
 
             listener.onNewVideo(video, playlist)
 
@@ -116,7 +122,11 @@ class PlayerController(val listener: OnPlayerControllerListener) :
         playerReady = true
         if (shouldPlay) {
             shouldPlay = false
-            play()
+
+            play(tempIndex, tempStartSeconds)
+
+            tempIndex = null
+            tempStartSeconds = 0
         }
     }
 
