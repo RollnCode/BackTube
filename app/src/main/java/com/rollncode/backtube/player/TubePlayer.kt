@@ -68,7 +68,7 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
 
         when (tubeUri.type) {
             TUBE_VIDEO    -> execute {
-                TubeApi.requestVideo(tubeUri.id,
+                TubeApi.requestVideo(tubeUri.videoId,
                         {
                             toLog("requestVideo: $it")
 
@@ -80,7 +80,7 @@ object TubePlayer : ObjectsReceiver, ICoroutines {
                         })
             }
             TUBE_PLAYLIST -> execute {
-                TubeApi.requestPlaylist(tubeUri.id,
+                TubeApi.requestPlaylist(tubeUri.playlistId,
                         {
                             toLog("requestPlaylist: $it")
 

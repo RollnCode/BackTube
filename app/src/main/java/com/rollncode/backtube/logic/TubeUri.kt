@@ -6,31 +6,56 @@ import android.support.annotation.StringDef
 class TubeUri(uri: Uri) {
 
     val original = uri.checkHierarchical()
-    var id: String = ""
+    var playlistId: String = ""
         private set
+    var videoId: String = ""
+        private set
+    var timeReference = 0
     @TubeType
     var type: String = TUBE_IGNORE
         private set
 
     init {
-        var parameter = original.getQueryParameter("v")
-        if (parameter.isNullOrEmpty())
-            parameter = original.lastPathSegment
+        val authority = original.authority ?: ""
 
-        if (parameter?.contains("list") == true) {
-            parameter = original.getQueryParameter("list")
-            if (parameter?.isNotEmpty() == true) {
-                id = parameter
-                type = TUBE_PLAYLIST
-            }
+        playlistId = original.getQueryParameter("list") ?: ""
+        timeReference = (original.getQueryParameter("t") ?: "0").toInt()
 
-        } else if (parameter?.isNotEmpty() == true) {
-            id = parameter
-            type = TUBE_VIDEO
+        videoId = original.getQueryParameter("v") ?: ""
+        val u = original.getQueryParameter("u") ?: ""
+        if (u.isNotEmpty())
+            videoId = Uri.parse(u).getQueryParameter("v") ?: ""
+
+        if (videoId.isEmpty() &&
+                (playlistId.isEmpty() && authority.contains("youtube.com") ||
+                        authority.contains("youtu.be"))) {
+            videoId = original.lastPathSegment ?: ""
+            if (videoId.length < 11)
+                videoId = ""
+        }
+
+        if (playlistId.isEmpty()) {
+            if (videoId.isNotEmpty())
+                type = TUBE_VIDEO
+
+        } else {
+            type = TUBE_PLAYLIST
+        }
+
+        if (type == TUBE_IGNORE) {
+            playlistId = ""
+            videoId = ""
+            timeReference = 0
         }
     }
 
-    override fun toString() = "[$type]$original{$id}"
+    override fun toString() = when (type) {
+        TUBE_VIDEO    -> "[$TUBE_VIDEO]$original{$videoId}:$timeReference"
+        TUBE_PLAYLIST -> "[$TUBE_PLAYLIST]$original{$playlistId/$videoId}:$timeReference"
+        TUBE_IGNORE   -> "[$TUBE_IGNORE]$original"
+
+        else          -> throw IllegalStateException("Unknown type: $type")
+    }
 }
 
 private fun Uri.checkHierarchical(): Uri {
